@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <title>Trang Quản Trị - Quán ăn Demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .food-item-title { color: #0d6efd; font-weight: bold; }
-        .food-item-price { color: #dc3545; font-weight: bold; }
-    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark px-4">
@@ -16,99 +12,174 @@
     </nav>
 
     <div class="container my-4">
-        <ul class="nav nav-tabs mb-4" role="tablist" id="admin-tabs">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-tab">Quản Lý & Thêm Món Ăn</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings-tab">Cài Đặt Quán</button></li>
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-tab">Quản Lý Món Ăn/Uống</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#rooms-tab">Quản Lý Bàn</button></li>
-            <li class="nav-item" id="user-tab-nav"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users-tab">Quản Lý Tài Khoản</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inventory-tab">Kiểm Soát Tồn Kho</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ingredients-tab">Nguyên Liệu Đầu Vào</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#expenses-tab">Chi Phí Quán</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#promo-tab">Khuyến Mãi & Banner</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#report-tab">Báo Cáo Doanh Thu & Lợi Nhuận</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings-tab">Cài Đặt Quán</button></li>
         </ul>
 
         <div class="tab-content">
-            <!-- THỰC ĐƠN & THÊM MÓN ĂN (Dành cho Admin hoặc Nhân viên) -->
+            <!-- QUẢN LÝ MÓN ĂN & ĐỒ UỐNG -->
             <div class="tab-pane fade show active" id="menu-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
-                        <h4 class="mb-3 text-primary">Thêm / Sửa Món Ăn (Admin & Nhân viên)</h4>
+                        <h4 class="mb-3 text-primary">Thêm / Sửa Món Ăn / Uống</h4>
                         <input type="hidden" id="m-id">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Tên món ăn:</label>
-                            <input type="text" id="m-name" class="form-control" placeholder="VD: Phở bò đặc biệt">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Danh mục:</label>
+                        <div class="mb-3"><label class="fw-bold">Tên món ăn/uống:</label><input type="text" id="m-name" class="form-control"></div>
+                        <div class="mb-3"><label class="fw-bold">Danh mục:</label>
                             <select id="m-cat" class="form-select">
                                 <option value="Đồ ăn">Đồ ăn</option>
                                 <option value="Đồ uống">Đồ uống</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Ảnh món ăn (Nhấp vào ô bên dưới để chọn upload qua Postimg.cc):</label>
+                            <label class="fw-bold">Ảnh món (Upload qua Postimg.cc):</label>
                             <div class="input-group">
-                                <input type="text" id="m-image" class="form-control" placeholder="Dán link trực tiếp hoặc chọn upload...">
-                                <a href="https://postimg.cc/" target="_blank" class="btn btn-outline-secondary">Upload Ảnh lên Postimg.cc</a>
+                                <input type="text" id="m-image" class="form-control" placeholder="Dán link trực tiếp ảnh...">
+                                <a href="https://postimg.cc/" target="_blank" class="btn btn-outline-secondary">Postimg.cc</a>
                             </div>
-                            <small class="text-muted">Nhấp nút bên cạnh để mở trang Postimg.cc tải ảnh lên, sau đó copy link trực tiếp (Direct Link) dán vào đây.</small>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Mô tả chi tiết:</label>
-                            <textarea id="m-desc" class="form-control" rows="2" placeholder="Mô tả hương vị món ăn..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Đơn vị:</label>
-                            <input type="text" id="m-unit" class="form-control" placeholder="tô, đĩa, ly...">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Giá Bán (VNĐ):</label>
-                            <input type="number" id="m-price" class="form-control" placeholder="50000">
-                        </div>
-                        <button class="btn btn-success w-100 fw-bold" onclick="saveMenu()">Lưu Món Ăn (Đồng bộ Bảng Giá & Danh Mục)</button>
+                        <div class="mb-3"><label class="fw-bold">Mô tả:</label><textarea id="m-desc" class="form-control" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="fw-bold">Đơn vị tính:</label><input type="text" id="m-unit" class="form-control" placeholder="tô, đĩa, ly..."></div>
+                        <div class="mb-3"><label class="fw-bold">Giá Bán (VNĐ):</label><input type="number" id="m-price" class="form-control"></div>
+                        <button class="btn btn-success w-100 fw-bold" onclick="saveMenu()">Lưu Món (Đồng bộ Bảng Giá & Tồn Kho)</button>
                     </div>
-
                     <div class="col-md-7">
-                        <h4 class="mb-3 fs-5">Danh Sách Món Ăn Hiện Tại</h4>
+                        <h4 class="mb-3 fs-5">Danh Sách Món</h4>
                         <table class="table table-bordered bg-white align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Ảnh</th>
-                                    <th>Tên Món</th>
-                                    <th>Danh Mục</th>
-                                    <th>Giá</th>
-                                    <th>Thao Tác</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Ảnh</th><th>Tên</th><th>Danh Mục</th><th>Giá</th><th>Thao Tác</th></tr></thead>
                             <tbody id="menu-table"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Cài đặt cơ bản -->
+            <!-- QUẢN LÝ BÀN -->
+            <div class="tab-pane fade" id="rooms-tab">
+                <div class="row">
+                    <div class="col-md-5 card p-4">
+                        <h4>Thêm / Sửa Bàn</h4>
+                        <input type="hidden" id="r-id">
+                        <div class="mb-3"><label>Tên bàn:</label><input type="text" id="r-name" class="form-control" placeholder="VD: Bàn 01, VIP 1..."></div>
+                        <button class="btn btn-success" onclick="saveRoom()">Lưu Bàn</button>
+                    </div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Tên Bàn</th><th>Trạng Thái</th><th>Thao Tác</th></tr></thead>
+                            <tbody id="admin-room-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KIỂM SOÁT TỒN KHO -->
+            <div class="tab-pane fade" id="inventory-tab">
+                <div class="card p-4">
+                    <h4 class="mb-3">Danh Sách Tồn Kho Hàng Hóa</h4>
+                    <table class="table table-bordered bg-white">
+                        <thead><tr><th>Tên Hàng</th><th>Danh Mục</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th></tr></thead>
+                        <tbody id="inventory-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NGUYÊN LIỆU ĐẦU VÀO (Tính trừ vào lợi nhuận) -->
+            <div class="tab-pane fade" id="ingredients-tab">
+                <div class="row">
+                    <div class="col-md-5 card p-4">
+                        <h4 class="mb-3">Nhập Nguyên Liệu Đầu Vào</h4>
+                        <div class="mb-3"><label>Tên nguyên liệu:</label><input type="text" id="ing-name" class="form-control" placeholder="Thịt, rau, gia vị..."></div>
+                        <div class="mb-3"><label>Số lượng:</label><input type="number" id="ing-qty" class="form-control"></div>
+                        <div class="mb-3"><label>Đơn vị tính:</label><input type="text" id="ing-unit" class="form-control" placeholder="kg, lít, gói..."></div>
+                        <div class="mb-3"><label>Giá nhập (VNĐ):</label><input type="number" id="ing-price" class="form-control"></div>
+                        <button class="btn btn-success" onclick="saveIngredient()">Thêm Nguyên Liệu</button>
+                    </div>
+                    <div class="col-md-7">
+                        <h4 class="mb-3">Danh Sách Nguyên Liệu (Trừ Lợi Nhuận)</h4>
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Tên</th><th>SL</th><th>ĐV</th><th>Giá Nhập</th><th>Thành Tiền</th><th>Xóa</th></tr></thead>
+                            <tbody id="ingredients-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHI PHÍ -->
+            <div class="tab-pane fade" id="expenses-tab">
+                <div class="row">
+                    <div class="col-md-5 card p-4">
+                        <h4 class="mb-3">Ghi Nhận Chi Phí</h4>
+                        <div class="mb-3"><label>Loại chi phí:</label>
+                            <select id="e-cat" class="form-select">
+                                <option value="Lương">Lương</option>
+                                <option value="Điện">Điện</option>
+                                <option value="Nước">Nước</option>
+                                <option value="Mặt bằng">Mặt bằng</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label>Số tiền (VNĐ):</label><input type="number" id="e-amount" class="form-control"></div>
+                        <div class="mb-3"><label>Ngày chi:</label><input type="date" id="e-date" class="form-control"></div>
+                        <div class="mb-3"><label>Ghi chú:</label><input type="text" id="e-note" class="form-control"></div>
+                        <button class="btn btn-danger" onclick="saveExpense()">Lưu Chi Phí</button>
+                    </div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Loại</th><th>Số Tiền</th><th>Ngày</th><th>Ghi Chú</th><th>Xóa</th></tr></thead>
+                            <tbody id="expense-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KHUYẾN MÃI & BANNER -->
+            <div class="tab-pane fade" id="promo-tab">
+                <div class="row">
+                    <div class="col-md-6 card p-4 shadow-sm">
+                        <h4 class="mb-3">🎁 Quản Lý Khuyến Mãi</h4>
+                        <div class="mb-3"><label>Nội dung:</label><textarea id="p-content" class="form-control" rows="2"></textarea></div>
+                        <div class="mb-3"><label>Phần trăm giảm giá (%):</label><input type="number" id="p-discount" class="form-control"></div>
+                        <div class="mb-3 form-check"><input type="checkbox" class="form-check-input" id="p-active"><label class="form-check-label">Kích hoạt</label></div>
+                        <button class="btn btn-success" onclick="savePromotion()">Lưu Khuyến Mãi</button>
+                    </div>
+                    <div class="col-md-6 card p-4 shadow-sm">
+                        <h4 class="mb-3">🖼️ Banner Quảng Cáo (Mỗi dòng 1 link ảnh)</h4>
+                        <div class="mb-3"><textarea id="s-banners" class="form-control" rows="5"></textarea></div>
+                        <button class="btn btn-primary" onclick="saveSettings()">Cập Nhật Banner</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BÁO CÁO DOANH THU & LỢI NHUẬN -->
+            <div class="tab-pane fade" id="report-tab">
+                <div class="card p-4">
+                    <h4 class="mb-3">Báo Cáo Doanh Thu & Lợi Nhuận (Đã trừ Chi phí & Nguyên liệu)</h4>
+                    <div class="row g-3 mb-4 align-items-end">
+                        <div class="col-md-4"><label>Từ ngày:</label><input type="date" id="rep-start" class="form-control"></div>
+                        <div class="col-md-4"><label>Đến ngày:</label><input type="date" id="rep-end" class="form-control"></div>
+                        <div class="col-md-4"><button class="btn btn-primary w-100" onclick="loadReport()">Xem Báo Cáo</button></div>
+                    </div>
+                    <div class="row text-center g-3">
+                        <div class="col-md-4"><div class="p-3 bg-light border rounded"><h6>Tổng Doanh Thu</h6><h4 class="text-primary fw-bold" id="rep-revenue">0đ</h4></div></div>
+                        <div class="col-md-4"><div class="p-3 bg-light border rounded"><h6>Tổng Chi Phí & Nguyên Liệu</h6><h4 class="text-warning fw-bold" id="rep-expense">0đ</h4></div></div>
+                        <div class="col-md-4"><div class="p-3 bg-light border rounded"><h6>LỢI NHUẬN RÒNG</h6><h4 class="text-success fw-bold" id="rep-net">0đ</h4></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CÀ ĐẶT QUÁN -->
             <div class="tab-pane fade" id="settings-tab">
                 <div class="card p-4 shadow-sm" style="max-width: 600px;">
-                    <h4 class="mb-3">Cài Đặt Thông Tin Quán</h4>
-                    <div class="mb-3"><label>Tên cơ sở:</label><input type="text" id="s-name" class="form-control" value="Quán ăn Demo"></div>
+                    <h4 class="mb-3">Cài Đặt Thông Tin Cơ Sở</h4>
+                    <div class="mb-3"><label>Tên cơ sở:</label><input type="text" id="s-name" class="form-control"></div>
                     <div class="mb-3"><label>Địa chỉ:</label><input type="text" id="s-address" class="form-control"></div>
                     <div class="mb-3"><label>SĐT:</label><input type="text" id="s-phone" class="form-control"></div>
                     <button class="btn btn-primary" onclick="saveSettings()">Lưu Thông Tin</button>
-                </div>
-            </div>
-
-            <!-- Quản lý bàn -->
-            <div class="tab-pane fade" id="rooms-tab">
-                <div class="card p-4">
-                    <h4>Quản lý bàn</h4>
-                    <p class="text-muted">Tính năng quản lý bàn hoạt động bình thường.</p>
-                </div>
-            </div>
-
-            <!-- Quản lý tài khoản (Chỉ Admin) -->
-            <div class="tab-pane fade" id="users-tab">
-                <div class="card p-4" style="max-width: 600px;">
-                    <h4>Quản Lý Tài Khoản (Admin)</h4>
-                    <table class="table table-bordered bg-white mt-3">
-                        <thead><tr><th>Tài Khoản</th><th>Quyền</th></tr></thead>
-                        <tbody id="user-table"></tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -116,46 +187,43 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const currentUser = JSON.parse(localStorage.getItem('user'));
-        if(!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
-            alert('Vui lòng đăng nhập tài khoản Quản trị hoặc Nhân viên để tiếp tục!');
+        const user = JSON.parse(localStorage.getItem('user'));
+        if(!user || (user.role !== 'admin' && user.role !== 'staff')) {
+            alert('Vui lòng đăng nhập!');
             window.location.href = 'index.html';
-        }
-
-        if(currentUser.role === 'staff') {
-            document.getElementById('user-tab-nav').style.display = 'none';
-            document.getElementById('admin-user-badge').innerText = 'Khu Vực Quản Trị (Nhân Viên)';
-        } else {
-            document.getElementById('admin-user-badge').innerText = 'Khu Vực Quản Trị (Admin)';
         }
 
         async function loadAll() {
             const sRes = await fetch('/api/settings');
-            const currentSettings = await sRes.json();
-            document.getElementById('s-name').value = currentSettings.name || 'Quán ăn Demo';
+            const s = await sRes.json();
+            document.getElementById('s-name').value = s.name || 'Quán ăn Demo';
+            document.getElementById('s-address').value = s.address || '';
+            document.getElementById('s-phone').value = s.phone || '';
+            document.getElementById('s-banners').value = s.banners || '';
+
+            const pRes = await fetch('/api/promotions');
+            const p = await pRes.json();
+            document.getElementById('p-content').value = p.content || '';
+            document.getElementById('p-discount').value = p.discount_percent || 0;
+            document.getElementById('p-active').checked = p.active === 1;
 
             const mRes = await fetch('/api/menu');
             const menu = await mRes.json();
             document.getElementById('menu-table').innerHTML = menu.map(m => `
                 <tr>
-                    <td><img src="${m.image_url || 'https://via.placeholder.com/50'}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded"></td>
-                    <td><b class="food-item-title">${m.item_name}</b><br><small class="text-muted">${m.description || ''}</small></td>
+                    <td><img src="${m.image_url || 'https://via.placeholder.com/40'}" style="width:40px;height:40px;object-fit:cover;" class="rounded"></td>
+                    <td><b>${m.item_name}</b></td>
                     <td>${m.category}</td>
-                    <td><span class="food-item-price">${Number(m.price).toLocaleString()}đ</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-warning me-1" onclick='editMenu(${JSON.stringify(m)})'>Sửa</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">Xóa</button>
-                    </td>
+                    <td class="text-danger fw-bold">${Number(m.price).toLocaleString()}đ</td>
+                    <td><button class="btn btn-sm btn-warning me-1" onclick='editMenu(${JSON.stringify(m)})'>Sửa</button><button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">Xóa</button></td>
                 </tr>
             `).join('');
 
-            if(currentUser.role === 'admin') {
-                const uRes = await fetch('/api/users');
-                const users = await uRes.json();
-                document.getElementById('user-table').innerHTML = users.map(u => `
-                    <tr><td>${u.username}</td><td><span class="badge ${u.role === 'admin' ? 'bg-danger':'bg-secondary'}">${u.role}</span></td></tr>
-                `).join('');
-            }
+            loadAdminRooms();
+            loadInventory();
+            loadIngredients();
+            loadExpenses();
+            loadReport();
         }
 
         async function saveMenu() {
@@ -166,30 +234,20 @@
             const description = document.getElementById('m-desc').value;
             const unit = document.getElementById('m-unit').value;
             const price = document.getElementById('m-price').value;
+            if(!item_name || !price) return alert('Nhập tên và giá món!');
 
-            if(!item_name || !price) {
-                alert('Vui lòng điền đầy đủ tên món và giá tiền!');
-                return;
-            }
-
-            const res = await fetch('/api/menu/save', {
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'},
+            await fetch('/api/menu/save', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ id, item_name, category, image_url, description, unit, price })
             });
-            const data = await res.json();
-            if(data.success) {
-                alert('Lưu món ăn thành công và đã tự động cập nhật vào Bảng giá thực đơn!');
-                document.getElementById('m-id').value = '';
-                document.getElementById('m-name').value = '';
-                document.getElementById('m-image').value = '';
-                document.getElementById('m-desc').value = '';
-                document.getElementById('m-unit').value = '';
-                document.getElementById('m-price').value = '';
-                loadAll();
-            } else {
-                alert('Lỗi khi lưu món ăn');
-            }
+            alert('Lưu món thành công!');
+            document.getElementById('m-id').value = '';
+            document.getElementById('m-name').value = '';
+            document.getElementById('m-image').value = '';
+            document.getElementById('m-desc').value = '';
+            document.getElementById('m-unit').value = '';
+            document.getElementById('m-price').value = '';
+            loadAll();
         }
 
         function editMenu(m) {
@@ -203,18 +261,123 @@
         }
 
         async function deleteMenu(id) {
-            if(confirm('Bạn có chắc chắn muốn xóa món này?')) {
-                await fetch(`/api/menu/${id}`, { method: 'DELETE' });
-                loadAll();
-            }
+            if(confirm('Xóa món này?')) { await fetch(`/api/menu/${id}`, { method: 'DELETE' }); loadAll(); }
+        }
+
+        async function loadAdminRooms() {
+            const res = await fetch('/api/admin/rooms');
+            const rooms = await res.json();
+            document.getElementById('admin-room-table').innerHTML = rooms.map(r => `
+                <tr><td><b>${r.room_name}</b></td><td>${r.status}</td><td><button class="btn btn-sm btn-danger" onclick="deleteRoom(${r.id})">Xóa</button></td></tr>
+            `).join('');
+        }
+
+        async function saveRoom() {
+            const room_name = document.getElementById('r-name').value;
+            if(!room_name) return alert('Nhập tên bàn!');
+            await fetch('/api/admin/rooms/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ room_name }) });
+            alert('Lưu bàn thành công!');
+            document.getElementById('r-name').value = '';
+            loadAdminRooms();
+        }
+
+        async function deleteRoom(id) {
+            if(confirm('Xóa bàn này?')) { await fetch(`/api/admin/rooms/${id}`, { method: 'DELETE' }); loadAdminRooms(); }
+        }
+
+        async function loadInventory() {
+            const res = await fetch('/api/inventory');
+            const inv = await res.json();
+            document.getElementById('inventory-table').innerHTML = inv.map(i => `
+                <tr><td>${i.item_name}</td><td>${i.category}</td><td>${i.quantity}</td><td>${i.unit}</td><td>${Number(i.import_price).toLocaleString()}đ</td></tr>
+            `).join('');
+        }
+
+        async function saveIngredient() {
+            const ingredient_name = document.getElementById('ing-name').value;
+            const quantity = document.getElementById('ing-qty').value;
+            const unit = document.getElementById('ing-unit').value;
+            const import_price = document.getElementById('ing-price').value;
+            if(!ingredient_name || !quantity || !import_price) return alert('Nhập đủ thông tin nguyên liệu!');
+
+            await fetch('/api/ingredients', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ ingredient_name, quantity, unit, import_price }) });
+            alert('Đã thêm nguyên liệu!');
+            document.getElementById('ing-name').value = '';
+            document.getElementById('ing-qty').value = '';
+            document.getElementById('ing-unit').value = '';
+            document.getElementById('ing-price').value = '';
+            loadIngredients();
+            loadReport();
+        }
+
+        async function loadIngredients() {
+            const res = await fetch('/api/ingredients');
+            const ing = await res.json();
+            document.getElementById('ingredients-table').innerHTML = ing.map(i => `
+                <tr><td>${i.ingredient_name}</td><td>${i.quantity}</td><td>${i.unit}</td><td>${Number(i.import_price).toLocaleString()}đ</td><td class="text-danger fw-bold">${(i.quantity * i.import_price).toLocaleString()}đ</td><td><button class="btn btn-sm btn-danger" onclick="deleteIngredient(${i.id})">Xóa</button></td></tr>
+            `).join('');
+        }
+
+        async function deleteIngredient(id) {
+            if(confirm('Xóa nguyên liệu này?')) { await fetch(`/api/ingredients/${id}`, { method: 'DELETE' }); loadIngredients(); loadReport(); }
+        }
+
+        async function saveExpense() {
+            const category = document.getElementById('e-cat').value;
+            const amount = document.getElementById('e-amount').value;
+            const date = document.getElementById('e-date').value;
+            const note = document.getElementById('e-note').value;
+            if(!amount) return alert('Nhập số tiền chi phí!');
+            await fetch('/api/expenses', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ category, amount, date, note }) });
+            alert('Lưu chi phí thành công!');
+            loadExpenses();
+            loadReport();
+        }
+
+        async function loadExpenses() {
+            const res = await fetch('/api/expenses');
+            const exp = await res.json();
+            document.getElementById('expense-table').innerHTML = exp.map(e => `
+                <tr><td>${e.category}</td><td class="text-danger">${Number(e.amount).toLocaleString()}đ</td><td>${e.date || ''}</td><td>${e.note || ''}</td><td><button class="btn btn-sm btn-danger" onclick="deleteExpense(${e.id})">Xóa</button></td></tr>
+            `).join('');
+        }
+
+        async function deleteExpense(id) {
+            if(confirm('Xóa chi phí này?')) { await fetch(`/api/expenses/${id}`, { method: 'DELETE' }); loadExpenses(); loadReport(); }
+        }
+
+        async function savePromotion() {
+            const content = document.getElementById('p-content').value;
+            const discount_percent = parseFloat(document.getElementById('p-discount').value) || 0;
+            const active = document.getElementById('p-active').checked ? 1 : 0;
+            await fetch('/api/admin/promotions', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content, discount_percent, active }) });
+            alert('Cập nhật khuyến mãi thành công!');
         }
 
         async function saveSettings() {
             await fetch('/api/settings', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name: document.getElementById('s-name').value, address: document.getElementById('s-address').value, phone: document.getElementById('s-phone').value })
+                body: JSON.stringify({
+                    name: document.getElementById('s-name').value,
+                    address: document.getElementById('s-address').value,
+                    phone: document.getElementById('s-phone').value,
+                    banners: document.getElementById('s-banners').value
+                })
             });
-            alert('Cập nhật thông tin thành công!');
+            alert('Cập nhật cài đặt thành công!');
+            loadAll();
+        }
+
+        async function loadReport() {
+            const start = document.getElementById('rep-start').value;
+            const end = document.getElementById('rep-end').value;
+            let url = '/api/reports/revenue';
+            if(start && end) url += `?start_date=${start}&end_date=${end}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            document.getElementById('rep-revenue').innerText = Number(data.totalRevenue).toLocaleString() + 'đ';
+            document.getElementById('rep-expense').innerText = Number(data.totalExpense).toLocaleString() + 'đ';
+            document.getElementById('rep-net').innerText = Number(data.netProfit).toLocaleString() + 'đ';
         }
 
         loadAll();
