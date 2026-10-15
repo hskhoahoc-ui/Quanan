@@ -117,7 +117,6 @@ async function initDB() {
             );
         `);
 
-        // Tên khởi tạo mặc định là Quán ăn Demo
         const resSet = await pool.query(`SELECT * FROM settings LIMIT 1`);
         if (resSet.rows.length === 0) {
             await pool.query(`INSERT INTO settings (name, address, phone) VALUES ('Quán ăn Demo', 'Cà Mau', '0123456789')`);
@@ -164,7 +163,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Cài đặt
+// Cài đặt & Banner
 app.get('/api/settings', async (req, res) => {
     const result = await pool.query(`SELECT * FROM settings LIMIT 1`);
     res.json(result.rows[0] || { name: 'Quán ăn Demo' });
@@ -194,7 +193,7 @@ app.post('/api/admin/promotions', async (req, res) => {
     res.json({ success: true, message: 'Cập nhật khuyến mãi thành công!' });
 });
 
-// Menu / Món ăn & Đồ uống (Đồng thời đồng bộ vào Bảng giá thực đơn và Tồn kho)
+// Menu / Món ăn & Đồ uống
 app.get('/api/menu', async (req, res) => {
     const result = await pool.query(`SELECT * FROM menu ORDER BY id DESC`);
     res.json(result.rows);
@@ -213,7 +212,6 @@ app.post('/api/menu/save', async (req, res) => {
                 `INSERT INTO menu (item_name, category, image_url, description, unit, price) VALUES ($1, $2, $3, $4, $5, $6)`,
                 [item_name, category || 'Đồ ăn', image_url, description, unit || 'phần', price]
             );
-            // Tự động thêm vào kho hàng
             await pool.query(
                 `INSERT INTO inventory (item_name, category, quantity, unit, import_price) VALUES ($1, $2, 100, $3, $4)`,
                 [item_name, category || 'Đồ ăn', unit || 'phần', price * 0.5]
@@ -230,10 +228,16 @@ app.delete('/api/menu/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Quản lý Bàn
+// Quản lý Bàn & Mở bàn
 app.get('/api/rooms', async (req, res) => {
     const result = await pool.query(`SELECT * FROM rooms ORDER BY id ASC`);
     res.json(result.rows);
+});
+
+app.post('/api/rooms/open', async (req, res) => {
+    const { room_id, customer_name } = req.body;
+    await pool.query(`UPDATE rooms SET status = 'Đang phục vụ', customer_name = $1 WHERE id = $2`, [customer_name || 'Khách lẻ', room_id]);
+    res.json({ success: true });
 });
 
 app.get('/api/admin/rooms', async (req, res) => {
@@ -256,8 +260,8 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Đặt món tại bàn
-app.post('/api/orders', (req, res) => {
+// Đặt món tại bàn & Realtime Audio
+const handleAddOrder = (req, res) => {
     const { room_id, item_id, quantity } = req.body;
     pool.query(`SELECT price, item_name FROM menu WHERE id = $1`, [item_id], (err, result) => {
         if (err || !result.rows[0]) return res.status(400).json({ error: 'Món không tồn tại' });
@@ -274,33 +278,16 @@ app.post('/api/orders', (req, res) => {
             res.json({ success: true });
         });
     });
-});
+};
+app.post('/api/orders', handleAddOrder);
+app.post('/api/orders/add', handleAddOrder);
 
 app.get('/api/orders/:roomId', async (req, res) => {
-    const result = await pool.query(`SELECT o.*, m.item_name FROM orders o JOIN menu m ON o.item_id = m.id WHERE o.room_id = $1`, [req.params.roomId]);
+    const result = await pool.query(`SELECT o.*, m.item_name, m.unit FROM orders o JOIN menu m ON o.item_id = m.id WHERE o.room_id = $1`, [req.params.roomId]);
     res.json(result.rows);
 });
 
-// Đặt hàng online
-app.post('/api/online-orders/submit', (req, res) => {
-    const { customer_name, customer_phone, delivery_address, items } = req.body;
-    const goods_total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    pool.query(`INSERT INTO online_orders (customer_name, customer_phone, delivery_address, items_detail, goods_total, shipping_fee, grand_total, status, created_date) VALUES ($1, $2, $3, $4, $5, 0, $6, 'Chờ xác nhận', $7) RETURNING id`,
-        [customer_name, customer_phone, delivery_address, JSON.stringify(items), goods_total, goods_total, currentDate], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Lỗi lưu đơn hàng' });
-            io.emit('online_order_new');
-            res.json({ success: true, orderId: result.rows[0].id });
-        });
-});
-
-app.get('/api/admin/online-orders', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM online_orders ORDER BY id DESC`);
-    res.json(result.rows);
-});
-
-// Thanh toán & Chốt bàn
+// Thanh toán & Chốt bàn (Trừ kho, phát âm thanh thanh toán)
 app.post('/api/rooms/confirm-paid', async (req, res) => {
     const { room_id, payment_method } = req.body;
     const method = payment_method || 'Tiền mặt';
@@ -321,18 +308,67 @@ app.post('/api/rooms/confirm-paid', async (req, res) => {
     const totalImportCost = items.reduce((sum, item) => sum + (item.import_price * item.quantity), 0);
     const currentDate = new Date().toISOString().split('T')[0];
 
-    await pool.query(`INSERT INTO bills (room_name, goods_total, discount_percent, discount_amount, grand_total, total_import_cost, items_detail, created_date, shipping_fee, order_type, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 'Tại bàn', $9)`,
-        [room.room_name, goodsTotal, discountPercent, discountAmount, grandTotal, totalImportCost, JSON.stringify(items), currentDate, method]);
-    
-    for (const item of items) {
+    try {
+        await pool.query(`INSERT INTO bills (room_name, goods_total, discount_percent, discount_amount, grand_total, total_import_cost, items_detail, created_date, shipping_fee, order_type, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 'Tại bàn', $9)`,
+            [room.room_name, goodsTotal, discountPercent, discountAmount, grandTotal, totalImportCost, JSON.stringify(items), currentDate, method]);
+        
+        for (const item of items) {
+            await pool.query(`UPDATE inventory SET quantity = GREATEST(0, quantity - $1) WHERE item_name = $2`, [item.quantity, item.item_name]);
+        }
+
+        await pool.query(`UPDATE rooms SET status = 'Trống', customer_name = NULL WHERE id = $1`, [room_id]);
+        await pool.query(`DELETE FROM orders WHERE room_id = $1`, [room_id]);
+
+        io.emit('room_paid', { roomName: room.room_name });
+        res.json({ success: true, roomName: room.room_name });
+    } catch (errDb) {
+        res.status(500).json({ error: errDb.message });
+    }
+});
+
+// Đặt hàng online & Báo âm thanh
+app.post('/api/online-orders/submit', (req, res) => {
+    const { customer_name, customer_phone, delivery_address, items } = req.body;
+    const goods_total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    pool.query(`INSERT INTO online_orders (customer_name, customer_phone, delivery_address, items_detail, goods_total, shipping_fee, grand_total, status, created_date) VALUES ($1, $2, $3, $4, $5, 0, $6, 'Chờ xác nhận', $7) RETURNING id`,
+        [customer_name, customer_phone, delivery_address, JSON.stringify(items), goods_total, goods_total, currentDate], (err, result) => {
+            if (err) return res.status(500).json({ error: 'Lỗi lưu đơn hàng' });
+            io.emit('online_order_new');
+            res.json({ success: true, orderId: result.rows[0].id });
+        });
+});
+
+app.get('/api/admin/online-orders', async (req, res) => {
+    const result = await pool.query(`SELECT * FROM online_orders ORDER BY id DESC`);
+    res.json(result.rows);
+});
+
+// Duyệt đơn hàng online, trừ kho & in bill
+app.post('/api/admin/online-orders/checkout', async (req, res) => {
+    const { order_id, shipping_fee, payment_method } = req.body;
+    const orderRes = await pool.query(`SELECT * FROM online_orders WHERE id = $1`, [order_id]);
+    const order = orderRes.rows[0];
+    if(!order) return res.status(400).json({ error: 'Đơn hàng không tồn tại' });
+
+    const items = JSON.parse(order.items_detail);
+    const goodsTotal = order.goods_total;
+    const ship = parseFloat(shipping_fee) || 0;
+    const grandTotal = goodsTotal + ship;
+    const currentDate = new Date().toISOString().split('T')[0];
+    const totalImportCost = 0;
+
+    await pool.query(`UPDATE online_orders SET shipping_fee = $1, grand_total = $2, status = 'Đã hoàn thành' WHERE id = $3`, [ship, grandTotal, order_id]);
+    await pool.query(`INSERT INTO bills (room_name, goods_total, discount_percent, discount_amount, grand_total, total_import_cost, items_detail, created_date, shipping_fee, order_type, payment_method) VALUES ($1, $2, 0, 0, $3, $4, $5, $6, $7, 'Online', $8)`,
+        [`Online: ${order.customer_name}`, goodsTotal, grandTotal, totalImportCost, order.items_detail, currentDate, ship, payment_method || 'Chuyển khoản']);
+
+    for(const item of items) {
         await pool.query(`UPDATE inventory SET quantity = GREATEST(0, quantity - $1) WHERE item_name = $2`, [item.quantity, item.item_name]);
     }
 
-    await pool.query(`UPDATE rooms SET status = 'Trống', customer_name = NULL WHERE id = $1`, [room_id]);
-    await pool.query(`DELETE FROM orders WHERE room_id = $1`, [room_id]);
-
-    io.emit('room_paid', { roomName: room.room_name });
-    res.json({ success: true });
+    const setRes = await pool.query(`SELECT * FROM settings LIMIT 1`);
+    res.json({ success: true, setting: setRes.rows[0], report: { room_name: `Online - ${order.customer_name}`, items, goodsTotal, shippingFee: ship, grandTotal } });
 });
 
 // Tồn kho
@@ -348,7 +384,7 @@ app.post('/api/inventory', async (req, res) => {
     res.json({ success: true });
 });
 
-// Nguyên liệu đầu vào (Tính trừ vào lợi nhuận)
+// Nguyên liệu đầu vào
 app.get('/api/ingredients', async (req, res) => {
     const result = await pool.query(`SELECT * FROM ingredients ORDER BY id DESC`);
     res.json(result.rows);
@@ -383,7 +419,12 @@ app.delete('/api/expenses/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Báo cáo doanh thu & Lợi nhuận
+// Hóa đơn & Báo cáo doanh thu
+app.get('/api/bills', async (req, res) => {
+    const result = await pool.query(`SELECT * FROM bills ORDER BY id DESC`);
+    res.json(result.rows);
+});
+
 app.get('/api/reports/revenue', async (req, res) => {
     const { start_date, end_date } = req.query;
     let queryBills = `SELECT SUM(grand_total) as total_rev, SUM(total_import_cost) as total_cost FROM bills`;
@@ -410,15 +451,89 @@ app.get('/api/reports/revenue', async (req, res) => {
     res.json({ totalRevenue, totalExpense, netProfit });
 });
 
-app.get('/api/bills', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM bills ORDER BY id DESC`);
-    res.json(result.rows);
+// Xuất Excel (.xlsx) với đầy đủ 4 Sheet
+app.get('/api/reports/export-excel', async (req, res) => {
+    const workbook = new ExcelJS.Workbook();
+    
+    // Sheet 1: Tổng lợi nhuận
+    const sheetProfit = workbook.addWorksheet('Tổng lợi nhuận');
+    sheetProfit.columns = [
+        { header: 'Chỉ số', key: 'metric', width: 30 },
+        { header: 'Số tiền (VNĐ)', key: 'amount', width: 25 }
+    ];
+    const bRes = await pool.query(`SELECT SUM(grand_total) as total_rev FROM bills`);
+    const iRes = await pool.query(`SELECT SUM(quantity * import_price) as total_ing FROM ingredients`);
+    const eRes = await pool.query(`SELECT SUM(amount) as total_exp FROM expenses`);
+    const rev = Number(bRes.rows[0].total_rev || 0);
+    const ing = Number(iRes.rows[0].total_ing || 0);
+    const exp = Number(eRes.rows[0].total_exp || 0);
+    sheetProfit.addRow({ metric: 'Tổng doanh thu', amount: rev });
+    sheetProfit.addRow({ metric: 'Tổng chi phí & nguyên liệu', amount: ing + exp });
+    sheetProfit.addRow({ metric: 'Lợi nhuận ròng', amount: rev - (ing + exp) });
+
+    // Sheet 2: Chi tiết bán
+    const sheetSales = workbook.addWorksheet('Chi tiết bán');
+    sheetSales.columns = [
+        { header: 'Mã Bill', key: 'id', width: 10 },
+        { header: 'Bàn / Khách', key: 'room_name', width: 20 },
+        { header: 'Tổng tiền', key: 'grand_total', width: 15 },
+        { header: 'Hình thức', key: 'payment_method', width: 15 },
+        { header: 'Ngày tạo', key: 'created_date', width: 15 }
+    ];
+    const billsRes = await pool.query(`SELECT * FROM bills ORDER BY id DESC`);
+    billsRes.rows.forEach(b => sheetSales.addRow(b));
+
+    // Sheet 3: Báo cáo tồn kho
+    const sheetInv = workbook.addWorksheet('Báo cáo tồn kho');
+    sheetInv.columns = [
+        { header: 'Tên hàng', key: 'item_name', width: 25 },
+        { header: 'Danh mục', key: 'category', width: 15 },
+        { header: 'Tồn kho', key: 'quantity', width: 10 },
+        { header: 'Đơn vị', key: 'unit', width: 10 }
+    ];
+    const invRes = await pool.query(`SELECT * FROM inventory`);
+    invRes.rows.forEach(i => sheetInv.addRow(i));
+
+    // Sheet 4: Tổng Nhập kho
+    const sheetIng = workbook.addWorksheet('Tổng Nhập kho');
+    sheetIng.columns = [
+        { header: 'Tên nguyên liệu', key: 'ingredient_name', width: 25 },
+        { header: 'Số lượng', key: 'quantity', width: 15 },
+        { header: 'Đơn vị', key: 'unit', width: 10 },
+        { header: 'Giá nhập', key: 'import_price', width: 15 }
+    ];
+    const ingRes = await pool.query(`SELECT * FROM ingredients`);
+    ingRes.rows.forEach(ig => sheetIng.addRow(ig));
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Bao_Cao_Quan_An_Demo.xlsx');
+    await workbook.xlsx.write(res);
+    res.end();
 });
 
-// Tài khoản
+// Quản lý tài khoản (Admin tạo/sửa/xóa)
 app.get('/api/users', async (req, res) => {
     const result = await pool.query(`SELECT id, username, role FROM users`);
     res.json(result.rows);
+});
+
+app.post('/api/users/save', async (req, res) => {
+    const { id, username, password, role } = req.body;
+    if(id) {
+        if(password) {
+            await pool.query(`UPDATE users SET username = $1, password = $2, role = $3 WHERE id = $4`, [username, password, role || 'staff', id]);
+        } else {
+            await pool.query(`UPDATE users SET username = $1, role = $2 WHERE id = $3`, [username, role || 'staff', id]);
+        }
+    } else {
+        await pool.query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`, [username, password || '123456', role || 'staff']);
+    }
+    res.json({ success: true });
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+    await pool.query(`DELETE FROM users WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
 });
 
 server.listen(PORT, () => {
