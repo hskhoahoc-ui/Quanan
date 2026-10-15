@@ -32,7 +32,6 @@
         </ul>
 
         <div class="tab-content">
-            <!-- QUẢN LÝ MÓN ĂN / UỐNG -->
             <div class="tab-pane fade show active" id="menu-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
@@ -40,57 +39,40 @@
                         <input type="hidden" id="m-id">
                         <div class="mb-3"><label class="fw-bold">Tên món:</label><input type="text" id="m-name" class="form-control"></div>
                         <div class="mb-3"><label class="fw-bold">Danh mục:</label><select id="m-cat" class="form-select"><option value="Đồ ăn">Đồ ăn</option><option value="Đồ uống">Đồ uống</option></select></div>
-                        <div class="mb-3"><label class="fw-bold">Ảnh (Postimg.cc):</label><input type="text" id="m-image" class="form-control" placeholder="Link ảnh..."></div>
+                        <div class="mb-3"><label class="fw-bold">Ảnh (Postimg.cc):</label><input type="text" id="m-image" class="form-control"></div>
                         <div class="mb-3"><label class="fw-bold">Mô tả:</label><textarea id="m-desc" class="form-control" rows="2"></textarea></div>
-                        <div class="mb-3"><label class="fw-bold">Đơn vị (chai, lon, phần...):</label><input type="text" id="m-unit" class="form-control"></div>
-                        <div class="mb-3"><label class="fw-bold">Giá Bán (VNĐ):</label><input type="number" id="m-price" class="form-control"></div>
+                        <div class="mb-3"><label class="fw-bold">Đơn vị:</label><input type="text" id="m-unit" class="form-control"></div>
+                        <div class="mb-3"><label class="fw-bold">Giá Bán:</label><input type="number" id="m-price" class="form-control"></div>
                         <button class="btn btn-success w-100 fw-bold" onclick="saveMenu()">Lưu Món</button>
                     </div>
-                    <div class="col-md-7">
-                        <table class="table table-bordered bg-white align-middle">
-                            <thead><tr><th>Ảnh</th><th>Tên</th><th>Danh Mục</th><th>Giá</th><th>Thao Tác</th></tr></thead>
-                            <tbody id="menu-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="col-md-7"><table class="table table-bordered bg-white align-middle"><thead><tr><th>Ảnh</th><th>Tên</th><th>Danh Mục</th><th>Giá</th><th>Thao Tác</th></tr></thead><tbody id="menu-table"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- QUẢN LÝ BÀN -->
             <div class="tab-pane fade" id="rooms-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
                         <h4>Thêm / Sửa Bàn</h4>
-                        <div class="mb-3"><label>Tên bàn:</label><input type="text" id="r-name" class="form-control" placeholder="VD: Bàn 01, VIP 1..."></div>
+                        <div class="mb-3"><label>Tên bàn:</label><input type="text" id="r-name" class="form-control"></div>
                         <button class="btn btn-success" onclick="saveRoom()">Lưu Bàn</button>
                     </div>
-                    <div class="col-md-7">
-                        <table class="table table-bordered bg-white">
-                            <thead><tr><th>Bàn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-                            <tbody id="admin-room-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Bàn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="admin-room-table"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- ĐƠN HÀNG ONLINE -->
             <div class="tab-pane fade" id="online-orders-tab">
                 <div class="card p-4">
                     <h4 class="mb-3">Danh Sách Đơn Hàng Online</h4>
                     <div class="table-responsive">
                         <table class="table table-bordered bg-white align-middle">
-                            <thead>
-                                <tr>
-                                    <th>ID</th><th>Khách</th><th>SĐT & Địa chỉ</th><th>Món</th>
-                                    <th>Tiền hàng</th><th>Phí ship</th><th>Tổng</th><th>Trạng thái</th><th>Thao tác</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>ID</th><th>Khách</th><th>SĐT & Địa chỉ</th><th>Món</th><th>Tiền hàng</th><th>Phí ship</th><th>Tổng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
                             <tbody id="admin-online-orders-table"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- KHO HÀNG HÓA (CÓ SỬA/XÓA TỒN KHO) -->
+            <!-- KHO HÀNG HÓA (CÓ Ô NHẬP GIÁ BÁN & SỬA/XÓA) -->
             <div class="tab-pane fade" id="inventory-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
@@ -99,15 +81,16 @@
                         <div class="mb-3"><label class="fw-bold">Tên hàng:</label><input type="text" id="inv-name" class="form-control" placeholder="VD: Nước ngọt, Bia..."></div>
                         <div class="mb-3"><label class="fw-bold">Danh mục:</label><select id="inv-cat" class="form-select"><option value="Đồ ăn">Đồ ăn</option><option value="Đồ uống">Đồ uống</option></select></div>
                         <div class="mb-3"><label class="fw-bold">Số lượng:</label><input type="number" id="inv-qty" class="form-control" placeholder="100"></div>
-                        <div class="mb-3"><label class="fw-bold">Đơn vị tính:</label><input type="text" id="inv-unit" class="form-control" placeholder="chai, lon, ly..."></div>
-                        <div class="mb-3"><label class="fw-bold">Giá nhập vào (VNĐ):</label><input type="number" id="inv-price" class="form-control" placeholder="10000"></div>
+                        <div class="mb-3"><label class="fw-bold">Đơn vị tính:</label><input type="text" id="inv-unit" class="form-control" placeholder="chai, lon..."></div>
+                        <div class="mb-3"><label class="fw-bold">Giá nhập vào (VNĐ):</label><input type="number" id="inv-price" class="form-control" placeholder="7000"></div>
+                        <div class="mb-3"><label class="fw-bold text-danger">Giá bán ra (VNĐ):</label><input type="number" id="inv-selling-price" class="form-control" placeholder="10000"></div>
                         <button class="btn btn-success w-100 fw-bold" onclick="saveInventory()">Lưu Hàng Vào Kho</button>
                     </div>
                     <div class="col-md-7">
                         <h4 class="mb-3 fs-5">Kiểm Soát Tồn Kho Hàng Hóa</h4>
                         <div class="table-responsive">
                             <table class="table table-bordered bg-white align-middle">
-                                <thead><tr><th>Tên Hàng</th><th>Danh Mục</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th><th>Thao Tác</th></tr></thead>
+                                <thead><tr><th>Tên Hàng</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th><th>Giá Bán</th><th>Thao Tác</th></tr></thead>
                                 <tbody id="inventory-table"></tbody>
                             </table>
                         </div>
@@ -115,27 +98,20 @@
                 </div>
             </div>
 
-            <!-- NGUYÊN LIỆU ĐẦU VÀO -->
             <div class="tab-pane fade" id="ingredients-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
                         <h4>Nhập Nguyên Liệu Đầu Vào</h4>
-                        <div class="mb-3"><label>Tên nguyên liệu:</label><input type="text" id="ing-name" class="form-control"></div>
-                        <div class="mb-3"><label>Số lượng:</label><input type="number" id="ing-qty" class="form-control"></div>
-                        <div class="mb-3"><label>Đơn vị:</label><input type="text" id="ing-unit" class="form-control" placeholder="kg, lít, gói..."></div>
+                        <div class="mb-3"><label>Tên:</label><input type="text" id="ing-name" class="form-control"></div>
+                        <div class="mb-3"><label>SL:</label><input type="number" id="ing-qty" class="form-control"></div>
+                        <div class="mb-3"><label>Đơn vị:</label><input type="text" id="ing-unit" class="form-control"></div>
                         <div class="mb-3"><label>Giá nhập:</label><input type="number" id="ing-price" class="form-control"></div>
-                        <button class="btn btn-success" onclick="saveIngredient()">Thêm Nguyên Liệu</button>
+                        <button class="btn btn-success" onclick="saveIngredient()">Thêm</button>
                     </div>
-                    <div class="col-md-7">
-                        <table class="table table-bordered bg-white">
-                            <thead><tr><th>Tên</th><th>SL</th><th>ĐV</th><th>Giá</th><th>Xóa</th></tr></thead>
-                            <tbody id="ingredients-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Tên</th><th>SL</th><th>ĐV</th><th>Giá</th><th>Xóa</th></tr></thead><tbody id="ingredients-table"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- CHI PHÍ -->
             <div class="tab-pane fade" id="expenses-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -143,18 +119,12 @@
                         <div class="mb-3"><label>Loại:</label><select id="e-cat" class="form-select"><option value="Lương">Lương</option><option value="Điện">Điện</option><option value="Nước">Nước</option><option value="Khác">Khác</option></select></div>
                         <div class="mb-3"><label>Số tiền:</label><input type="number" id="e-amount" class="form-control"></div>
                         <div class="mb-3"><label>Ngày:</label><input type="date" id="e-date" class="form-control"></div>
-                        <button class="btn btn-danger" onclick="saveExpense()">Lưu Chi Phí</button>
+                        <button class="btn btn-danger" onclick="saveExpense()">Lưu</button>
                     </div>
-                    <div class="col-md-7">
-                        <table class="table table-bordered bg-white">
-                            <thead><tr><th>Loại</th><th>Số tiền</th><th>Ngày</th><th>Xóa</th></tr></thead>
-                            <tbody id="expense-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Loại</th><th>Số tiền</th><th>Ngày</th><th>Xóa</th></tr></thead><tbody id="expense-table"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- BÁO CÁO & XUẤT EXCEL -->
             <div class="tab-pane fade" id="report-tab">
                 <div class="card p-4 mb-4">
                     <h4 class="mb-3">Báo Cáo Doanh Thu & Xuất File Excel (.xlsx)</h4>
@@ -179,7 +149,6 @@
                 </div>
             </div>
 
-            <!-- QUẢN LÝ TÀI KHOẢN (Chỉ Admin) -->
             <div class="tab-pane fade" id="users-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -190,16 +159,10 @@
                         <div class="mb-3"><label>Quyền:</label><select id="u-role" class="form-select"><option value="staff">Nhân viên</option><option value="admin">Admin</option></select></div>
                         <button class="btn btn-primary" onclick="saveUser()">Lưu Tài Khoản</button>
                     </div>
-                    <div class="col-md-7">
-                        <table class="table table-bordered bg-white">
-                            <thead><tr><th>Tài khoản</th><th>Quyền</th><th>Thao tác</th></tr></thead>
-                            <tbody id="user-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Tài khoản</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody id="user-table"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- CÀ ĐẶT QUÁN & LINK QR -->
             <div class="tab-pane fade" id="settings-tab">
                 <div class="card p-4 shadow-sm" style="max-width: 600px;">
                     <h4 class="mb-3">Cài Đặt Thông Tin & Link QR</h4>
@@ -212,7 +175,6 @@
         </div>
     </div>
 
-    <!-- MODAL IN BILL -->
     <div class="modal fade" id="billModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 350px;">
             <div class="modal-content p-3" id="printable-bill" style="font-family: monospace;">
@@ -373,7 +335,8 @@
             const res = await fetch('/api/inventory'); const inv = await res.json();
             document.getElementById('inventory-table').innerHTML = inv.map(i => `
                 <tr>
-                    <td><b>${i.item_name}</b></td><td>${i.category}</td><td class="fw-bold text-success">${i.quantity}</td><td>${i.unit}</td><td>${Number(i.import_price).toLocaleString()}đ</td>
+                    <td><b>${i.item_name}</b></td><td class="fw-bold text-success">${i.quantity}</td><td>${i.unit}</td>
+                    <td>${Number(i.import_price || 0).toLocaleString()}đ</td><td>${Number(i.price || 0).toLocaleString()}đ</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1" onclick='editInventory(${JSON.stringify(i)})'>Sửa</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteInventory(${i.id})">Xóa</button>
@@ -389,11 +352,12 @@
             const quantity = document.getElementById('inv-qty').value;
             const unit = document.getElementById('inv-unit').value;
             const import_price = document.getElementById('inv-price').value;
+            const price = document.getElementById('inv-selling-price').value;
 
-            if(!item_name || !quantity || !import_price) { alert('Điền đầy đủ thông tin!'); return; }
+            if(!item_name || !quantity || !import_price || !price) { alert('Điền đầy đủ thông tin và giá bán!'); return; }
 
             const url = id ? '/api/inventory/update' : '/api/inventory';
-            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, item_name, category, quantity, unit, import_price }) });
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, item_name, category, quantity, unit, import_price, price }) });
             if(res.ok) {
                 alert('Thành công!');
                 document.getElementById('inv-id').value = '';
@@ -401,6 +365,7 @@
                 document.getElementById('inv-qty').value = '';
                 document.getElementById('inv-unit').value = '';
                 document.getElementById('inv-price').value = '';
+                document.getElementById('inv-selling-price').value = '';
                 document.getElementById('inv-form-title').innerText = 'Nhập Hàng Hóa Vào Kho';
                 loadInventory();
             }
@@ -413,6 +378,7 @@
             document.getElementById('inv-qty').value = item.quantity;
             document.getElementById('inv-unit').value = item.unit;
             document.getElementById('inv-price').value = item.import_price;
+            document.getElementById('inv-selling-price').value = item.price || 0;
             document.getElementById('inv-form-title').innerText = 'Sửa Tồn Kho Hàng Hóa';
         }
 
