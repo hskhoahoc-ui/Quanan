@@ -87,7 +87,8 @@ async function initDB() {
                 category TEXT,
                 quantity NUMERIC,
                 unit TEXT,
-                import_price NUMERIC
+                import_price NUMERIC,
+                price NUMERIC DEFAULT 0
             );
             CREATE TABLE IF NOT EXISTS expenses (
                 id SERIAL PRIMARY KEY,
@@ -116,6 +117,9 @@ async function initDB() {
                 import_price NUMERIC
             );
         `);
+
+        // Đảm bảo cột price tồn tại trong inventory nếu bảng cũ chưa có
+        await pool.query(`ALTER TABLE inventory ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;`);
 
         const resSet = await pool.query(`SELECT * FROM settings LIMIT 1`);
         if (resSet.rows.length === 0) {
@@ -163,7 +167,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Cài đặt & Banner & Link QR
+// Cài đặt
 app.get('/api/settings', async (req, res) => {
     const result = await pool.query(`SELECT * FROM settings LIMIT 1`);
     res.json(result.rows[0] || { name: 'Quán ăn Demo', qr_code: '' });
@@ -224,7 +228,7 @@ app.delete('/api/menu/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Quản lý Bàn & Mở bàn
+// Quản lý Bàn
 app.get('/api/rooms', async (req, res) => {
     const result = await pool.query(`SELECT * FROM rooms ORDER BY id ASC`);
     res.json(result.rows);
@@ -256,7 +260,7 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Đặt món tại bàn & Realtime
+// Đặt món tại bàn
 const handleAddOrder = (req, res) => {
     const { room_id, item_id, quantity } = req.body;
     pool.query(`SELECT price, item_name FROM menu WHERE id = $1`, [item_id], (err, result) => {
@@ -367,25 +371,24 @@ app.post('/api/admin/online-orders/checkout', async (req, res) => {
     res.json({ success: true, setting: setRes.rows[0], report: { room_name: `Online - ${order.customer_name}`, items, goodsTotal, shippingFee: ship, grandTotal } });
 });
 
-// Kho hàng hóa (Tự động liên kết menu khi nhập chai/lon/đồ uống)
+// Kho hàng hóa & Đồng bộ Menu
 app.get('/api/inventory', async (req, res) => {
     const result = await pool.query(`SELECT * FROM inventory ORDER BY id DESC`);
     res.json(result.rows);
 });
 
 app.post('/api/inventory', async (req, res) => {
-    const { item_name, category, quantity, unit, import_price } = req.body;
+    const { item_name, category, quantity, unit, import_price, price } = req.body;
     try {
-        await pool.query(`INSERT INTO inventory (item_name, category, quantity, unit, import_price) VALUES ($1, $2, $3, $4, $5)`,
-            [item_name, category || 'Đồ ăn', quantity, unit || 'phần', import_price]);
+        const sellingPrice = price || (Number(import_price) * 1.5);
+        await pool.query(`INSERT INTO inventory (item_name, category, quantity, unit, import_price, price) VALUES ($1, $2, $3, $4, $5, $6)`,
+            [item_name, category || 'Đồ uống', quantity, unit || 'chai', import_price, sellingPrice]);
 
         const checkMenu = await pool.query(`SELECT * FROM menu WHERE item_name = $1`, [item_name]);
         if(checkMenu.rows.length === 0) {
-            const sellingPrice = Number(import_price) * 1.5;
             await pool.query(`INSERT INTO menu (item_name, category, description, unit, price, import_price) VALUES ($1, $2, $3, $4, $5, $6)`,
-                [item_name, category || 'Đồ ăn', 'Hàng nhập kho', unit || 'phần', sellingPrice, import_price]);
+                [item_name, category || 'Đồ uống', 'Hàng đóng chai/lon', unit || 'chai', sellingPrice, import_price]);
         }
-
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -393,10 +396,12 @@ app.post('/api/inventory', async (req, res) => {
 });
 
 app.post('/api/inventory/update', async (req, res) => {
-    const { id, item_name, category, quantity, unit, import_price } = req.body;
+    const { id, item_name, category, quantity, unit, import_price, price } = req.body;
     try {
-        await pool.query(`UPDATE inventory SET item_name = $1, category = $2, quantity = $3, unit = $4, import_price = $5 WHERE id = $6`,
-            [item_name, category, quantity, unit, import_price, id]);
+        await pool.query(`UPDATE inventory SET item_name = $1, category = $2, quantity = $3, unit = $4, import_price = $5, price = $6 WHERE id = $7`,
+            [item_name, category, quantity, unit, import_price, price, id]);
+        
+        await pool.query(`UPDATE menu SET price = $1, unit = $2 WHERE item_name = $3`, [price, unit, item_name]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
