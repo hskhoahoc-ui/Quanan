@@ -16,7 +16,56 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres.zvqmptcxkmoxkkrpepbk:%5BDIepNN%402024%5D@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres',
+    connectionString: process.env.DATABASE_URL || '2026-10-15T11:03:44.212754715Z 
+2026-10-15T11:03:44.212758696Z 3 vulnerabilities (2 moderate, 1 high)
+2026-10-15T11:03:44.212760077Z 
+2026-10-15T11:03:44.212761765Z To address all issues possible (including breaking changes), run:
+2026-10-15T11:03:44.212763551Z   npm audit fix --force
+2026-10-15T11:03:44.212765169Z 
+2026-10-15T11:03:44.212769571Z Some issues need review, and may require choosing
+2026-10-15T11:03:44.212770924Z a different dependency.
+2026-10-15T11:03:44.212772097Z 
+2026-10-15T11:03:44.212773456Z Run `npm audit` for details.
+2026-10-15T11:03:45.015609353Z ==> Uploading build...
+2026-10-15T11:03:47.388194473Z ==> Uploaded in 1.9s. Compression took 0.4s
+2026-10-15T11:03:47.388948594Z ==> Build successful 🎉
+2026-10-15T11:03:48.42082425Z ==> Deploying...
+2026-10-15T11:03:48.521949783Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-10-15T11:04:02.624364771Z ==> Running 'npm start'
+2026-10-15T11:04:03.82321847Z 
+2026-10-15T11:04:03.823255411Z > coffee-shop-management@1.0.0 start
+2026-10-15T11:04:03.823263081Z > node server.js
+2026-10-15T11:04:03.823265751Z 
+2026-10-15T11:04:05.525231218Z Server Quán ăn Demo đang chạy tại cổng 10000
+2026-10-15T11:04:06.890510606Z Lỗi khởi tạo DB: error: password authentication failed for user "postgres"
+2026-10-15T11:04:06.890542977Z     at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+2026-10-15T11:04:06.890548347Z     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+2026-10-15T11:04:06.890553068Z     at async initDB (/opt/render/project/src/server.js:26:9) {
+2026-10-15T11:04:06.890555708Z   length: 71,
+2026-10-15T11:04:06.890559168Z   severity: 'FATAL',
+2026-10-15T11:04:06.890561848Z   code: '28P01',
+2026-10-15T11:04:06.890564288Z   detail: undefined,
+2026-10-15T11:04:06.890566808Z   hint: undefined,
+2026-10-15T11:04:06.890569238Z   position: undefined,
+2026-10-15T11:04:06.890573418Z   internalPosition: undefined,
+2026-10-15T11:04:06.890575828Z   internalQuery: undefined,
+2026-10-15T11:04:06.890578128Z   where: undefined,
+2026-10-15T11:04:06.890580348Z   schema: undefined,
+2026-10-15T11:04:06.890582599Z   table: undefined,
+2026-10-15T11:04:06.890585128Z   column: undefined,
+2026-10-15T11:04:06.890587428Z   dataType: undefined,
+2026-10-15T11:04:06.890589899Z   constraint: undefined,
+2026-10-15T11:04:06.890592349Z   file: undefined,
+2026-10-15T11:04:06.890594799Z   line: undefined,
+2026-10-15T11:04:06.890597619Z   routine: undefined
+2026-10-15T11:04:06.890600209Z }
+2026-10-15T11:04:09.701951912Z ==> Your service is live 🎉
+2026-10-15T11:04:09.784118223Z ==> 
+2026-10-15T11:04:09.790832968Z ==> ///////////////////////////////////////////////////////////
+2026-10-15T11:04:09.797764212Z ==> 
+2026-10-15T11:04:09.80604481Z ==> Available at your primary URL https://quanan-oszr.onrender.com
+2026-10-15T11:04:09.81031158Z ==> 
+2026-10-15T11:04:09.81457455Z ==> ///////////////////////////////////////////////////////////',
     ssl: { rejectUnauthorized: false },
     family: 4
 });
