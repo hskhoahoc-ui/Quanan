@@ -14,11 +14,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    family: 4
+    ssl: { rejectUnauthorized: false }
 });
 
 // Khởi tạo toàn bộ Database và bảng dữ liệu đầy đủ
