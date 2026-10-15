@@ -90,14 +90,56 @@
                 </div>
             </div>
 
-            <!-- KHO HÀNG HÓA -->
+            <!-- KHO HÀNG HÓA (ĐÃ HOÀN THIỆN GIAO DIỆN 2 CỘT) -->
             <div class="tab-pane fade" id="inventory-tab">
-                <div class="card p-4">
-                    <h4 class="mb-3">Kiểm Soát Tồn Kho Hàng Hóa</h4>
-                    <table class="table table-bordered bg-white align-middle">
-                        <thead><tr><th>Tên Hàng</th><th>Danh Mục</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th></tr></thead>
-                        <tbody id="inventory-table"></tbody>
-                    </table>
+                <div class="row">
+                    <!-- Cột trái: Form nhập hàng hóa vào kho -->
+                    <div class="col-md-5 card p-4 shadow-sm">
+                        <h4 class="mb-3 text-primary">Nhập Hàng Hóa Vào Kho</h4>
+                        <div class="mb-3">
+                            <label class="fw-bold">Tên hàng:</label>
+                            <input type="text" id="inv-name" class="form-control" placeholder="VD: Nước ngọt, Bia, ...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Danh mục:</label>
+                            <select id="inv-cat" class="form-select">
+                                <option value="Đồ ăn">Đồ ăn</option>
+                                <option value="Đồ uống">Đồ uống</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Số lượng:</label>
+                            <input type="number" id="inv-qty" class="form-control" placeholder="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Đơn vị tính:</label>
+                            <input type="text" id="inv-unit" class="form-control" placeholder="chai, lon, thùng...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Giá nhập vào (VNĐ):</label>
+                            <input type="number" id="inv-price" class="form-control" placeholder="10000">
+                        </div>
+                        <button class="btn btn-success w-100 fw-bold" onclick="addNewInventory()">Thêm Hàng Vào Kho</button>
+                    </div>
+
+                    <!-- Cột phải: Hiển thị danh sách tồn kho hàng hóa bên cạnh -->
+                    <div class="col-md-7">
+                        <h4 class="mb-3 fs-5">Kiểm Soát Tồn Kho Hàng Hóa</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered bg-white align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Tên Hàng</th>
+                                        <th>Danh Mục</th>
+                                        <th>Tồn Kho</th>
+                                        <th>Đơn Vị</th>
+                                        <th>Giá Nhập</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventory-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -358,6 +400,36 @@
         async function loadInventory() {
             const res = await fetch('/api/inventory'); const inv = await res.json();
             document.getElementById('inventory-table').innerHTML = inv.map(i => `<tr><td>${i.item_name}</td><td>${i.category}</td><td class="fw-bold text-success">${i.quantity}</td><td>${i.unit}</td><td>${Number(i.import_price).toLocaleString()}đ</td></tr>`).join('');
+        }
+
+        async function addNewInventory() {
+            const item_name = document.getElementById('inv-name').value;
+            const category = document.getElementById('inv-cat').value;
+            const quantity = document.getElementById('inv-qty').value;
+            const unit = document.getElementById('inv-unit').value;
+            const import_price = document.getElementById('inv-price').value;
+
+            if(!item_name || !quantity || !import_price) {
+                alert('Vui lòng điền đầy đủ tên hàng, số lượng và giá nhập!');
+                return;
+            }
+
+            const res = await fetch('/api/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_name, category, quantity, unit, import_price })
+            });
+            
+            if(res.ok) {
+                alert('Nhập hàng vào kho thành công!');
+                document.getElementById('inv-name').value = '';
+                document.getElementById('inv-qty').value = '';
+                document.getElementById('inv-unit').value = '';
+                document.getElementById('inv-price').value = '';
+                loadInventory();
+            } else {
+                alert('Lỗi khi nhập kho!');
+            }
         }
 
         async function saveIngredient() {
