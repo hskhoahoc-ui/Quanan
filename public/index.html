@@ -17,7 +17,6 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 py-2 shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><span id="brand-name">Quán ăn Demo</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
                 <ul class="navbar-nav mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="switchTab('food-catalog', this)">Danh Mục Món Ăn</a></li>
@@ -35,33 +34,26 @@
         </div>
     </nav>
 
-    <!-- BANNER QUẢNG CÁO -->
     <div id="banner-container" class="container my-3"></div>
 
-    <!-- TAB 1: DANH MỤC MÓN ĂN (HIỂN THỊ ĐẦU TIÊN - 3 MÓN / DÒNG) -->
+    <!-- TAB 1: DANH MỤC MÓN ĂN (3 MÓN/DÒNG) -->
     <div class="container my-4 tab-section" id="tab-food-catalog">
         <h3 class="fw-bold fs-4 mb-3">Danh Mục Món Ăn Hôm Nay</h3>
         <div class="row" id="food-catalog-container"></div>
     </div>
 
-    <!-- TAB 2: DANH SÁCH BÀN -->
+    <!-- TAB 2: DANH SÁCH BÀN & GỌI MÓN -->
     <div class="container my-4 tab-section" id="tab-rooms" style="display:none;">
-        <h3 class="fw-bold fs-4 mb-3">Sơ Đồ Bàn Trực Tuyến</h3>
+        <h3 class="fw-bold fs-4 mb-3">Sơ Đồ Bàn Phục Vụ</h3>
         <div class="row" id="room-container"></div>
     </div>
 
-    <!-- TAB 3: BẢNG GIÁ THỰC ĐƠN TÁCH ĐỒ ĂN / ĐỒ UỐNG -->
+    <!-- TAB 3: BẢNG GIÁ TÁCH ĐỒ ĂN / ĐỒ UỐNG -->
     <div class="container my-4 tab-section" id="tab-menu-price" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Bảng Giá Thực Đơn & Dịch Vụ</h3>
         <div class="row">
-            <div class="col-md-6">
-                <h4 class="text-success fs-5 fw-bold">🍲 Món Đồ Ăn</h4>
-                <div id="menu-food-list" class="list-group mb-4"></div>
-            </div>
-            <div class="col-md-6">
-                <h4 class="text-primary fs-5 fw-bold">🥤 Món Đồ Uống</h4>
-                <div id="menu-drink-list" class="list-group"></div>
-            </div>
+            <div class="col-md-6"><h4 class="text-success fs-5 fw-bold">🍲 Đồ Ăn</h4><div id="menu-food-list" class="list-group mb-4"></div></div>
+            <div class="col-md-6"><h4 class="text-primary fs-5 fw-bold">🥤 Đồ Uống</h4><div id="menu-drink-list" class="list-group"></div></div>
         </div>
     </div>
 
@@ -69,12 +61,60 @@
     <div class="container my-4 tab-section" id="tab-online-order" style="display:none;">
         <div class="card p-4 shadow-sm" style="max-width: 600px; margin: auto;">
             <h3 class="fw-bold fs-4 mb-3">Đặt Hàng Online</h3>
-            <div class="mb-3"><label>Họ tên khách hàng:</label><input type="text" id="o-name" class="form-control"></div>
+            <div class="mb-3"><label>Họ tên khách:</label><input type="text" id="o-name" class="form-control"></div>
             <div class="mb-3"><label>Số điện thoại:</label><input type="text" id="o-phone" class="form-control"></div>
-            <div class="mb-3"><label>Địa chỉ giao hàng:</label><textarea id="o-address" class="form-control" rows="2"></textarea></div>
+            <div class="mb-3"><label>Địa chỉ:</label><textarea id="o-address" class="form-control" rows="2"></textarea></div>
             <h5 class="mt-3">Chọn món:</h5>
             <div id="online-menu-checkboxes" class="mb-3"></div>
             <button class="btn btn-success w-100 fw-bold" onclick="submitOnlineOrder()">Gửi Đơn Hàng Online</button>
+        </div>
+    </div>
+
+    <!-- MODAL MỞ BÀN / GỌI MÓN -->
+    <div class="modal fade" id="roomActionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-4">
+                <input type="hidden" id="modal-room-id">
+                <h4 class="fw-bold mb-3" id="modal-room-title">Bàn</h4>
+                <div id="open-room-section" class="mb-3">
+                    <label>Tên khách hàng:</label>
+                    <div class="input-group mt-1">
+                        <input type="text" id="modal-customer-name" class="form-control" placeholder="Tên khách...">
+                        <button class="btn btn-success" onclick="openRoom()">Mở Bàn Phục V vụ</button>
+                    </div>
+                </div>
+                <div id="active-room-section" style="display:none;">
+                    <h5 class="text-primary">Danh sách món đã gọi:</h5>
+                    <table class="table table-bordered">
+                        <thead><tr><th>Món</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                        <tbody id="modal-order-items"></tbody>
+                    </table>
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Chọn món thêm:</label>
+                            <select id="modal-menu-select" class="form-select"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="fw-bold">Số lượng:</label>
+                            <input type="number" id="modal-menu-qty" value="1" min="1" class="form-control">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="addOrderToRoom()">Thêm Món</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <label class="fw-bold me-2">Hình thức thanh toán:</label>
+                            <select id="modal-payment-method" class="form-select d-inline-block w-auto">
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Chuyển khoản">Chuyển khoản</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-danger fw-bold" onclick="confirmPayment()">Thanh Toán Thành Công & Đóng Bàn</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -82,9 +122,9 @@
     <div class="modal fade" id="loginModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
-                <h4 class="mb-3 fw-bold">Đăng Nhập Quản Trị / Nhân Viên</h4>
-                <div class="mb-3"><label>Tài khoản:</label><input type="text" id="login-username" class="form-control" placeholder="admin hoặc nhanvien"></div>
-                <div class="mb-3"><label>Mật khẩu:</label><input type="password" id="login-password" class="form-control" placeholder="Mật khẩu..."></div>
+                <h4 class="mb-3 fw-bold">Đăng Nhập Hệ Thống</h4>
+                <div class="mb-3"><label>Tài khoản:</label><input type="text" id="login-username" class="form-control"></div>
+                <div class="mb-3"><label>Mật khẩu:</label><input type="password" id="login-password" class="form-control"></div>
                 <button class="btn btn-primary w-100 fw-bold" onclick="submitLogin()">Đăng Nhập</button>
             </div>
         </div>
@@ -92,6 +132,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const socket = io();
+
+        function speakVietnamese(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'vi-VN';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        socket.on('order_added', (data) => {
+            speakVietnamese(`Có món mới tại ${data.roomName}`);
+            loadRooms();
+        });
+
+        socket.on('online_order_new', () => {
+            speakVietnamese("Có đơn hàng online mới");
+        });
+
+        socket.on('room_paid', (data) => {
+            speakVietnamese(`Đã thanh toán ${data.roomName}`);
+            loadRooms();
+        });
+
         function switchTab(tabId, element) {
             document.querySelectorAll('.tab-section').forEach(el => el.style.display = 'none');
             document.getElementById('tab-' + tabId).style.display = 'block';
@@ -110,23 +176,18 @@
                 localStorage.setItem('user', JSON.stringify(data.user));
                 alert('Đăng nhập thành công!');
                 window.location.href = 'admin.html';
-            } else {
-                alert(data.error);
-            }
+            } else { alert(data.error); }
         }
 
         async function init() {
             const resSet = await fetch('/api/settings');
             const settings = await resSet.json();
-            const brandName = settings.name || 'Quán ăn Demo';
-            document.getElementById('brand-name').innerText = brandName;
-            document.getElementById('page-title').innerText = brandName;
+            document.getElementById('brand-name').innerText = settings.name || 'Quán ăn Demo';
+            document.getElementById('page-title').innerText = settings.name || 'Quán ăn Demo';
 
             if(settings.banners) {
                 const banners = settings.banners.split('\n').filter(b => b.trim() !== '');
-                if(banners.length > 0) {
-                    document.getElementById('banner-container').innerHTML = `<img src="${banners[0]}" class="w-100 rounded shadow-sm" style="max-height: 250px; object-fit: cover;">`;
-                }
+                if(banners.length > 0) document.getElementById('banner-container').innerHTML = `<img src="${banners[0]}" class="w-100 rounded shadow-sm" style="max-height: 250px; object-fit: cover;">`;
             }
 
             const user = JSON.parse(localStorage.getItem('user'));
@@ -146,16 +207,12 @@
         async function loadFoodCatalog() {
             const res = await fetch('/api/menu');
             const menu = await res.json();
-            // Bố trí 3 món mỗi dòng (col-md-4)
             document.getElementById('food-catalog-container').innerHTML = menu.map(item => `
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm border">
-                        <img src="${item.image_url || 'https://via.placeholder.com/300x200?text=Quán+ăn+Demo'}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="${item.item_name}">
+                        <img src="${item.image_url || 'https://via.placeholder.com/300x200?text=Quán+ăn+Demo'}" class="card-img-top" style="height: 180px; object-fit: cover;">
                         <div class="card-body d-flex flex-column justify-content-between">
-                            <div>
-                                <h5 class="food-item-title">${item.item_name}</h5>
-                                <p class="text-muted small mb-2">${item.description || ''}</p>
-                            </div>
+                            <div><h5 class="food-item-title">${item.item_name}</h5><p class="text-muted small mb-2">${item.description || ''}</p></div>
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="food-item-price fs-5">${Number(item.price).toLocaleString()}đ</span>
                                 <span class="badge bg-secondary">${item.unit || 'phần'}</span>
@@ -169,17 +226,13 @@
         async function loadMenuPriceTab() {
             const res = await fetch('/api/menu');
             const menu = await res.json();
-            const foods = menu.filter(m => m.category === 'Đồ ăn');
-            const drinks = menu.filter(m => m.category === 'Đồ uống');
-
-            document.getElementById('menu-food-list').innerHTML = foods.map(f => `
+            document.getElementById('menu-food-list').innerHTML = menu.filter(m => m.category === 'Đồ ăn').map(f => `
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b class="food-item-title">${f.item_name}</b><br><small class="text-muted">${f.description || ''}</small></div>
                     <span class="food-item-price">${Number(f.price).toLocaleString()}đ / ${f.unit || 'phần'}</span>
                 </div>
             `).join('');
-
-            document.getElementById('menu-drink-list').innerHTML = drinks.map(d => `
+            document.getElementById('menu-drink-list').innerHTML = menu.filter(m => m.category === 'Đồ uống').map(d => `
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b class="food-item-title">${d.item_name}</b><br><small class="text-muted">${d.description || ''}</small></div>
                     <span class="food-item-price">${Number(d.price).toLocaleString()}đ / ${d.unit || 'ly'}</span>
@@ -192,12 +245,70 @@
             const rooms = await res.json();
             document.getElementById('room-container').innerHTML = rooms.map(room => `
                 <div class="col-md-3 mb-3">
-                    <div class="card ${room.status !== 'Trống' ? 'room-busy' : 'room-empty'} p-3 shadow-sm border">
+                    <div class="card ${room.status !== 'Trống' ? 'room-busy' : 'room-empty'} p-3 shadow-sm border" onclick='openRoomModal(${JSON.stringify(room)})'>
                         <h5 class="fw-bold">${room.room_name}</h5>
                         <p class="mb-0">Trạng thái: <b>${room.status}</b></p>
+                        ${room.status !== 'Trống' ? `<small class="text-danger">Khách: ${room.customer_name}</small>` : ''}
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function openRoomModal(room) {
+            document.getElementById('modal-room-id').value = room.id;
+            document.getElementById('modal-room-title').innerText = `${room.room_name} - Trạng thái: ${room.status}`;
+            if(room.status === 'Trống') {
+                document.getElementById('open-room-section').style.display = 'block';
+                document.getElementById('active-room-section').style.display = 'none';
+                document.getElementById('modal-customer-name').value = `Khách ${room.room_name}`;
+            } else {
+                document.getElementById('open-room-section').style.display = 'none';
+                document.getElementById('active-room-section').style.display = 'block';
+                loadRoomOrders(room.id);
+                loadMenuSelect();
+            }
+            new bootstrap.Modal(document.getElementById('roomActionModal')).show();
+        }
+
+        async function openRoom() {
+            const room_id = document.getElementById('modal-room-id').value;
+            const customer_name = document.getElementById('modal-customer-name').value;
+            await fetch('/api/rooms/open', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ room_id, customer_name }) });
+            loadRooms();
+            openRoomModal({ id: room_id, room_name: document.getElementById('modal-room-title').innerText.split(' - ')[0], status: 'Đang phục vụ', customer_name });
+        }
+
+        async function loadRoomOrders(roomId) {
+            const res = await fetch(`/api/orders/${roomId}`);
+            const orders = await res.json();
+            document.getElementById('modal-order-items').innerHTML = orders.map(o => `
+                <tr><td>${o.item_name}</td><td>${o.quantity} ${o.unit}</td><td>${(o.total_price/o.quantity).toLocaleString()}đ</td><td class="fw-bold text-danger">${o.total_price.toLocaleString()}đ</td></tr>
+            `).join('');
+        }
+
+        async function loadMenuSelect() {
+            const res = await fetch('/api/menu');
+            const menu = await res.json();
+            document.getElementById('modal-menu-select').innerHTML = menu.map(m => `<option value="${m.id}">${m.item_name} - ${Number(m.price).toLocaleString()}đ</option>`).join('');
+        }
+
+        async function addOrderToRoom() {
+            const room_id = document.getElementById('modal-room-id').value;
+            const item_id = document.getElementById('modal-menu-select').value;
+            const quantity = document.getElementById('modal-menu-qty').value;
+            await fetch('/api/orders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ room_id, item_id, quantity }) });
+            loadRoomOrders(room_id);
+        }
+
+        async function confirmPayment() {
+            const room_id = document.getElementById('modal-room-id').value;
+            const payment_method = document.getElementById('modal-payment-method').value;
+            const res = await fetch('/api/rooms/confirm-paid', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ room_id, payment_method }) });
+            const data = await res.json();
+            if(data.success) {
+                alert('Thanh toán thành công!');
+                location.reload();
+            }
         }
 
         async function loadOnlineMenu() {
@@ -215,7 +326,7 @@
             const customer_name = document.getElementById('o-name').value;
             const customer_phone = document.getElementById('o-phone').value;
             const delivery_address = document.getElementById('o-address').value;
-            if(!customer_name || !customer_phone || !delivery_address) return alert('Vui lòng điền đầy đủ thông tin giao hàng!');
+            if(!customer_name || !customer_phone || !delivery_address) return alert('Nhập đủ thông tin giao hàng!');
 
             const resMenu = await fetch('/api/menu');
             const menu = await resMenu.json();
@@ -224,22 +335,14 @@
                 const qty = parseInt(document.getElementById(`online-qty-${m.id}`).value) || 0;
                 if(qty > 0) items.push({ item_id: m.id, item_name: m.item_name, price: m.price, quantity: qty, unit: m.unit });
             });
+            if(items.length === 0) return alert('Chọn ít nhất 1 món!');
 
-            if(items.length === 0) return alert('Vui lòng chọn ít nhất 1 món!');
-
-            const res = await fetch('/api/online-orders/submit', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customer_name, customer_phone, delivery_address, items })
-            });
+            const res = await fetch('/api/online-orders/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer_name, customer_phone, delivery_address, items }) });
             const data = await res.json();
-            if(data.success) {
-                alert('Đặt hàng online thành công!');
-                location.reload();
-            }
+            if(data.success) { alert('Đặt hàng thành công!'); location.reload(); }
         }
 
         function logout() { localStorage.removeItem('user'); location.reload(); }
-
         init();
     </script>
 </body>
