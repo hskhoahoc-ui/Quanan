@@ -34,10 +34,10 @@
                     <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('menu-price', this)">Bảng Giá Thực Đơn</a></li>
                     <li class="nav-item"><a class="nav-link position-relative" href="#" onclick="switchTab('online-order', this)">🛒 Đặt Hàng Online <span id="online-count-badge" class="badge bg-danger" style="display:none;">0</span></a></li>
                     
-                    <!-- SỐ ĐIỆN THOẠI VÀ ĐỊA CHỈ ĐẶT SAU ĐẶT HÀNG ONLINE -->
-                    <li class="nav-item ms-lg-3 text-light small border-start ps-lg-3 d-none d-lg-block">
-                        <div id="header-phone">📞 0123456789</div>
-                        <div id="header-address" class="text-muted" style="font-size: 11px;">📍 Cà Mau</div>
+                    <!-- SỐ ĐIỆN THOẠI VÀ ĐỊA CHỈ (CHỮ MÀU TRẮNG) ĐẶT SAU ĐẶT HÀNG ONLINE -->
+                    <li class="nav-item ms-lg-3 text-white small border-start ps-lg-3 d-none d-lg-block">
+                        <div id="header-phone" class="fw-bold text-white">📞 0123456789</div>
+                        <div id="header-address" class="text-white" style="font-size: 12px;">📍 Cà Mau</div>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
@@ -53,7 +53,7 @@
     <!-- BANNER QUẢNG CÁO -->
     <div id="banner-container" class="container my-3"></div>
 
-    <!-- TAB 1: DANH MỤC MÓN ĂN VỚI NÚT LỌC MÓN ĂN / MÓN UỐNG TRÊN DÒNG TIÊU ĐỀ -->
+    <!-- TAB 1: DANH MỤC MÓN ĂN VỚI NÚT LỌC MÓN ĂN / MÓN UỐNG -->
     <div class="container my-4 tab-section" id="tab-food-catalog">
         <div class="d-flex gap-2 mb-4">
             <button class="btn btn-primary fw-bold" id="btn-filter-food" onclick="filterCatalog('food')">🍲 Danh Mục Món Ăn</button>
@@ -240,7 +240,7 @@
             document.getElementById('brand-name').innerText = settings.name || 'Quán ăn Demo';
             document.getElementById('page-title').innerText = settings.name || 'Quán ăn Demo';
             
-            // Hiển thị số điện thoại dòng trên, địa chỉ dòng dưới nằm ngay sau Đặt hàng online
+            // Gán giá trị Số điện thoại và Địa chỉ thành chữ màu trắng
             document.getElementById('header-phone').innerText = `📞 ${settings.phone || '0123456789'}`;
             document.getElementById('header-address').innerText = `📍 ${settings.address || 'Cà Mau'}`;
 
