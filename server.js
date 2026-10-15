@@ -21,6 +21,34 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// HÀM TỰ ĐỘNG ĐỒNG BỘ KHO HÀNG HÓA SANG MENU (PHƯƠNG ÁN 1)
+async function syncInventoryToMenu() {
+    try {
+        const invRes = await pool.query(`SELECT * FROM inventory`);
+        for (const item of invRes.rows) {
+            const unitLower = (item.unit || '').toLowerCase();
+            const category = (unitLower === 'chai' || unitLower === 'lon') ? 'Nước đóng chai' : (item.category || 'Đồ uống');
+            const sellingPrice = item.price && Number(item.price) > 0 ? item.price : (Number(item.import_price || 0) * 1.5);
+
+            const checkMenu = await pool.query(`SELECT * FROM menu WHERE item_name = $1`, [item.item_name]);
+            if (checkMenu.rows.length === 0) {
+                await pool.query(
+                    `INSERT INTO menu (item_name, category, description, unit, price, import_price) VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [item.item_name, category, 'Nước đóng chai/lon', item.unit || 'chai', sellingPrice, item.import_price || 0]
+                );
+            } else {
+                await pool.query(
+                    `UPDATE menu SET price = $1, unit = $2, category = $3 WHERE item_name = $4`,
+                    [sellingPrice, item.unit, category, item.item_name]
+                );
+            }
+        }
+        console.log('Đã tự động đồng bộ Kho Hàng Hóa sang Menu thành công!');
+    } catch (err) {
+        console.error('Lỗi đồng bộ Kho sang Menu:', err);
+    }
+}
+
 async function initDB() {
     try {
         await pool.query(`
@@ -140,6 +168,9 @@ async function initDB() {
             }
         }
         console.log('Khởi tạo Database thành công!');
+
+        // Gọi đồng bộ dữ liệu kho sang menu ngay sau khi khởi tạo xong DB
+        setTimeout(syncInventoryToMenu, 1000);
     } catch (err) {
         console.error('Lỗi khởi tạo DB:', err);
     }
