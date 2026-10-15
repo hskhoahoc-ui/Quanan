@@ -118,7 +118,6 @@ async function initDB() {
             );
         `);
 
-        // Đảm bảo cột price tồn tại trong inventory nếu bảng cũ chưa có
         await pool.query(`ALTER TABLE inventory ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;`);
 
         const resSet = await pool.query(`SELECT * FROM settings LIMIT 1`);
@@ -287,7 +286,7 @@ app.get('/api/orders/:roomId', async (req, res) => {
     res.json(result.rows);
 });
 
-// Thanh toán & Chốt bàn (Trừ kho, phát âm thanh)
+// Thanh toán & Chốt bàn
 app.post('/api/rooms/confirm-paid', async (req, res) => {
     const { room_id, payment_method } = req.body;
     const method = payment_method || 'Tiền mặt';
@@ -345,7 +344,6 @@ app.get('/api/admin/online-orders', async (req, res) => {
     res.json(result.rows);
 });
 
-// Duyệt đơn online, trừ kho & in bill
 app.post('/api/admin/online-orders/checkout', async (req, res) => {
     const { order_id, shipping_fee, payment_method } = req.body;
     const orderRes = await pool.query(`SELECT * FROM online_orders WHERE id = $1`, [order_id]);
@@ -371,7 +369,7 @@ app.post('/api/admin/online-orders/checkout', async (req, res) => {
     res.json({ success: true, setting: setRes.rows[0], report: { room_name: `Online - ${order.customer_name}`, items, goodsTotal, shippingFee: ship, grandTotal } });
 });
 
-// Kho hàng hóa & Đồng bộ Menu
+// Kho hàng hóa & Tự động đồng bộ chuẩn danh mục sang Menu
 app.get('/api/inventory', async (req, res) => {
     const result = await pool.query(`SELECT * FROM inventory ORDER BY id DESC`);
     res.json(result.rows);
@@ -381,13 +379,19 @@ app.post('/api/inventory', async (req, res) => {
     const { item_name, category, quantity, unit, import_price, price } = req.body;
     try {
         const sellingPrice = price || (Number(import_price) * 1.5);
+        const unitLower = (unit || '').toLowerCase();
+        const menuCategory = (unitLower === 'chai' || unitLower === 'lon') ? 'Nước đóng chai' : (category || 'Đồ uống');
+
         await pool.query(`INSERT INTO inventory (item_name, category, quantity, unit, import_price, price) VALUES ($1, $2, $3, $4, $5, $6)`,
             [item_name, category || 'Đồ uống', quantity, unit || 'chai', import_price, sellingPrice]);
 
         const checkMenu = await pool.query(`SELECT * FROM menu WHERE item_name = $1`, [item_name]);
-        if(checkMenu.rows.length === 0) {
+        if (checkMenu.rows.length === 0) {
             await pool.query(`INSERT INTO menu (item_name, category, description, unit, price, import_price) VALUES ($1, $2, $3, $4, $5, $6)`,
-                [item_name, category || 'Đồ uống', 'Hàng đóng chai/lon', unit || 'chai', sellingPrice, import_price]);
+                [item_name, menuCategory, 'Hàng đóng chai/lon', unit || 'chai', sellingPrice, import_price]);
+        } else {
+            await pool.query(`UPDATE menu SET price = $1, unit = $2, category = $3 WHERE item_name = $4`,
+                [sellingPrice, unit, menuCategory, item_name]);
         }
         res.json({ success: true });
     } catch (err) {
@@ -398,10 +402,14 @@ app.post('/api/inventory', async (req, res) => {
 app.post('/api/inventory/update', async (req, res) => {
     const { id, item_name, category, quantity, unit, import_price, price } = req.body;
     try {
+        const unitLower = (unit || '').toLowerCase();
+        const menuCategory = (unitLower === 'chai' || unitLower === 'lon') ? 'Nước đóng chai' : (category || 'Đồ uống');
+
         await pool.query(`UPDATE inventory SET item_name = $1, category = $2, quantity = $3, unit = $4, import_price = $5, price = $6 WHERE id = $7`,
             [item_name, category, quantity, unit, import_price, price, id]);
         
-        await pool.query(`UPDATE menu SET price = $1, unit = $2 WHERE item_name = $3`, [price, unit, item_name]);
+        await pool.query(`UPDATE menu SET price = $1, unit = $2, category = $3 WHERE item_name = $4`, 
+            [price, unit, menuCategory, item_name]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -488,7 +496,6 @@ app.get('/api/reports/revenue', async (req, res) => {
 app.get('/api/reports/export-excel', async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     
-    // Sheet 1: Tổng lợi nhuận
     const sheetProfit = workbook.addWorksheet('Tổng lợi nhuận');
     sheetProfit.columns = [
         { header: 'Chỉ số', key: 'metric', width: 30 },
@@ -504,7 +511,6 @@ app.get('/api/reports/export-excel', async (req, res) => {
     sheetProfit.addRow({ metric: 'Tổng chi phí & nguyên liệu', amount: ing + exp });
     sheetProfit.addRow({ metric: 'Lợi nhuận ròng', amount: rev - (ing + exp) });
 
-    // Sheet 2: Chi tiết bán
     const sheetSales = workbook.addWorksheet('Chi tiết bán');
     sheetSales.columns = [
         { header: 'Mã Bill', key: 'id', width: 10 },
@@ -516,7 +522,6 @@ app.get('/api/reports/export-excel', async (req, res) => {
     const billsRes = await pool.query(`SELECT * FROM bills ORDER BY id DESC`);
     billsRes.rows.forEach(b => sheetSales.addRow(b));
 
-    // Sheet 3: Báo cáo tồn kho
     const sheetInv = workbook.addWorksheet('Báo cáo tồn kho');
     sheetInv.columns = [
         { header: 'Tên hàng', key: 'item_name', width: 25 },
@@ -527,7 +532,6 @@ app.get('/api/reports/export-excel', async (req, res) => {
     const invRes = await pool.query(`SELECT * FROM inventory`);
     invRes.rows.forEach(i => sheetInv.addRow(i));
 
-    // Sheet 4: Tổng Nhập kho
     const sheetIng = workbook.addWorksheet('Tổng Nhập kho');
     sheetIng.columns = [
         { header: 'Tên nguyên liệu', key: 'ingredient_name', width: 25 },
