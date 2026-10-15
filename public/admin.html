@@ -32,6 +32,7 @@
         </ul>
 
         <div class="tab-content">
+            <!-- QUẢN LÝ MÓN ĂN / UỐNG -->
             <div class="tab-pane fade show active" id="menu-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
@@ -49,6 +50,7 @@
                 </div>
             </div>
 
+            <!-- QUẢN LÝ BÀN -->
             <div class="tab-pane fade" id="rooms-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -60,6 +62,7 @@
                 </div>
             </div>
 
+            <!-- ĐƠN HÀNG ONLINE -->
             <div class="tab-pane fade" id="online-orders-tab">
                 <div class="card p-4">
                     <h4 class="mb-3">Danh Sách Đơn Hàng Online</h4>
@@ -72,22 +75,22 @@
                 </div>
             </div>
 
-            <!-- KHO HÀNG HÓA (CÓ Ô NHẬP GIÁ BÁN & SỬA/XÓA) -->
+            <!-- KHO HÀNG HÓA & NƯỚC ĐÓNG CHAI -->
             <div class="tab-pane fade" id="inventory-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
-                        <h4 class="mb-3 text-primary" id="inv-form-title">Nhập Hàng Hóa Vào Kho</h4>
+                        <h4 class="mb-3 text-primary" id="inv-form-title">Quản Lý Kho & Nước Đóng Chai</h4>
                         <input type="hidden" id="inv-id">
-                        <div class="mb-3"><label class="fw-bold">Tên hàng:</label><input type="text" id="inv-name" class="form-control" placeholder="VD: Nước ngọt, Bia..."></div>
-                        <div class="mb-3"><label class="fw-bold">Danh mục:</label><select id="inv-cat" class="form-select"><option value="Đồ ăn">Đồ ăn</option><option value="Đồ uống">Đồ uống</option></select></div>
-                        <div class="mb-3"><label class="fw-bold">Số lượng:</label><input type="number" id="inv-qty" class="form-control" placeholder="100"></div>
-                        <div class="mb-3"><label class="fw-bold">Đơn vị tính:</label><input type="text" id="inv-unit" class="form-control" placeholder="chai, lon..."></div>
+                        <div class="mb-3"><label class="fw-bold">Tên hàng:</label><input type="text" id="inv-name" class="form-control" placeholder="VD: Sting đỏ, Nước suối..."></div>
+                        <div class="mb-3"><label class="fw-bold">Danh mục:</label><select id="inv-cat" class="form-select"><option value="Đồ uống">Đồ uống</option><option value="Đồ ăn">Đồ ăn</option></select></div>
+                        <div class="mb-3"><label class="fw-bold">Số lượng:</label><input type="number" id="inv-qty" class="form-control" placeholder="50"></div>
+                        <div class="mb-3"><label class="fw-bold">Đơn vị (chai, lon...):</label><input type="text" id="inv-unit" class="form-control" placeholder="chai, lon"></div>
                         <div class="mb-3"><label class="fw-bold">Giá nhập vào (VNĐ):</label><input type="number" id="inv-price" class="form-control" placeholder="7000"></div>
                         <div class="mb-3"><label class="fw-bold text-danger">Giá bán ra (VNĐ):</label><input type="number" id="inv-selling-price" class="form-control" placeholder="10000"></div>
                         <button class="btn btn-success w-100 fw-bold" onclick="saveInventory()">Lưu Hàng Vào Kho</button>
                     </div>
                     <div class="col-md-7">
-                        <h4 class="mb-3 fs-5">Kiểm Soát Tồn Kho Hàng Hóa</h4>
+                        <h4 class="mb-3 fs-5">Kiểm Soát Tồn Kho & Giá Bán</h4>
                         <div class="table-responsive">
                             <table class="table table-bordered bg-white align-middle">
                                 <thead><tr><th>Tên Hàng</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th><th>Giá Bán</th><th>Thao Tác</th></tr></thead>
@@ -98,6 +101,7 @@
                 </div>
             </div>
 
+            <!-- NGUYÊN LIỆU -->
             <div class="tab-pane fade" id="ingredients-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -112,6 +116,7 @@
                 </div>
             </div>
 
+            <!-- CHI PHÍ -->
             <div class="tab-pane fade" id="expenses-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -125,6 +130,7 @@
                 </div>
             </div>
 
+            <!-- BÁO CÁO -->
             <div class="tab-pane fade" id="report-tab">
                 <div class="card p-4 mb-4">
                     <h4 class="mb-3">Báo Cáo Doanh Thu & Xuất File Excel (.xlsx)</h4>
@@ -149,6 +155,7 @@
                 </div>
             </div>
 
+            <!-- QUẢN LÝ TÀI KHOẢN -->
             <div class="tab-pane fade" id="users-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
@@ -163,6 +170,7 @@
                 </div>
             </div>
 
+            <!-- CÀ ĐẶT -->
             <div class="tab-pane fade" id="settings-tab">
                 <div class="card p-4 shadow-sm" style="max-width: 600px;">
                     <h4 class="mb-3">Cài Đặt Thông Tin & Link QR</h4>
@@ -175,6 +183,7 @@
         </div>
     </div>
 
+    <!-- MODAL IN BILL -->
     <div class="modal fade" id="billModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 350px;">
             <div class="modal-content p-3" id="printable-bill" style="font-family: monospace;">
@@ -335,8 +344,11 @@
             const res = await fetch('/api/inventory'); const inv = await res.json();
             document.getElementById('inventory-table').innerHTML = inv.map(i => `
                 <tr>
-                    <td><b>${i.item_name}</b></td><td class="fw-bold text-success">${i.quantity}</td><td>${i.unit}</td>
-                    <td>${Number(i.import_price || 0).toLocaleString()}đ</td><td>${Number(i.price || 0).toLocaleString()}đ</td>
+                    <td><b>${i.item_name}</b></td>
+                    <td class="fw-bold text-success">${i.quantity}</td>
+                    <td><span class="badge bg-secondary">${i.unit}</span></td>
+                    <td>${Number(i.import_price || 0).toLocaleString()}đ</td>
+                    <td class="text-danger fw-bold">${Number(i.price || 0).toLocaleString()}đ</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1" onclick='editInventory(${JSON.stringify(i)})'>Sửa</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteInventory(${i.id})">Xóa</button>
@@ -366,7 +378,7 @@
                 document.getElementById('inv-unit').value = '';
                 document.getElementById('inv-price').value = '';
                 document.getElementById('inv-selling-price').value = '';
-                document.getElementById('inv-form-title').innerText = 'Nhập Hàng Hóa Vào Kho';
+                document.getElementById('inv-form-title').innerText = 'Quản Lý Kho & Nước Đóng Chai';
                 loadInventory();
             }
         }
