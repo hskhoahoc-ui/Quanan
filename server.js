@@ -239,7 +239,18 @@ app.post('/api/rooms/open', async (req, res) => {
     await pool.query(`UPDATE rooms SET status = 'Đang phục vụ', customer_name = $1 WHERE id = $2`, [customer_name || 'Khách lẻ', room_id]);
     res.json({ success: true });
 });
+// Thêm API cài đặt có hỗ trợ qrcode
+app.get('/api/settings', async (req, res) => {
+    const result = await pool.query(`SELECT * FROM settings LIMIT 1`);
+    res.json(result.rows[0] || { name: 'Quán ăn Demo', qr_code: '' });
+});
 
+app.post('/api/settings', async (req, res) => {
+    const { name, address, phone, qr_code, banners } = req.body;
+    await pool.query(`UPDATE settings SET name = $1, address = $2, phone = $3, qr_code = $4, banners = $5`, 
+        [name || 'Quán ăn Demo', address, phone, qr_code, banners]);
+    res.json({ success: true });
+});
 app.get('/api/admin/rooms', async (req, res) => {
     const result = await pool.query(`SELECT * FROM rooms ORDER BY id ASC`);
     res.json(result.rows);
