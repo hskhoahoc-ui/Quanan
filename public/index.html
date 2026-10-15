@@ -34,7 +34,6 @@
                     <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('menu-price', this)">Bảng Giá Thực Đơn</a></li>
                     <li class="nav-item"><a class="nav-link position-relative" href="#" onclick="switchTab('online-order', this)">🛒 Đặt Hàng Online <span id="online-count-badge" class="badge bg-danger" style="display:none;">0</span></a></li>
                     
-                    <!-- SỐ ĐIỆN THOẠI VÀ ĐỊA CHỈ (CHỮ MÀU TRẮNG) ĐẶT SAU ĐẶT HÀNG ONLINE -->
                     <li class="nav-item ms-lg-3 text-white small border-start ps-lg-3 d-none d-lg-block">
                         <div id="header-phone" class="fw-bold text-white">📞 0123456789</div>
                         <div id="header-address" class="text-white" style="font-size: 12px;">📍 Cà Mau</div>
@@ -50,10 +49,8 @@
         </div>
     </nav>
 
-    <!-- BANNER QUẢNG CÁO -->
     <div id="banner-container" class="container my-3"></div>
 
-    <!-- TAB 1: DANH MỤC MÓN ĂN VỚI NÚT LỌC MÓN ĂN / MÓN UỐNG -->
     <div class="container my-4 tab-section" id="tab-food-catalog">
         <div class="d-flex gap-2 mb-4">
             <button class="btn btn-primary fw-bold" id="btn-filter-food" onclick="filterCatalog('food')">🍲 Danh Mục Món Ăn</button>
@@ -62,22 +59,21 @@
         <div class="row" id="catalog-display-container"></div>
     </div>
 
-    <!-- TAB 2: DANH SÁCH BÀN & GỌI MÓN -->
     <div class="container my-4 tab-section" id="tab-rooms" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Sơ Đồ Bàn Phục Vụ</h3>
         <div class="row" id="room-container"></div>
     </div>
 
-    <!-- TAB 3: BẢNG GIÁ THỰC ĐƠN -->
+    <!-- TAB 3: BẢNG GIÁ THỰC ĐƠN (CÓ MỤC NƯỚC UỐNG ĐÓNG CHAI) -->
     <div class="container my-4 tab-section" id="tab-menu-price" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Bảng Giá Thực Đơn & Dịch Vụ</h3>
         <div class="row">
-            <div class="col-md-6"><h4 class="text-success fs-5 fw-bold">🍲 Món Đồ Ăn</h4><div id="menu-food-list" class="list-group mb-4"></div></div>
-            <div class="col-md-6"><h4 class="text-primary fs-5 fw-bold">🥤 Món Đồ Uống</h4><div id="menu-drink-list" class="list-group"></div></div>
+            <div class="col-md-4"><h4 class="text-success fs-5 fw-bold">🍲 Món Đồ Ăn</h4><div id="menu-food-list" class="list-group mb-4"></div></div>
+            <div class="col-md-4"><h4 class="text-primary fs-5 fw-bold">🥤 Món Đồ Uống</h4><div id="menu-drink-list" class="list-group mb-4"></div></div>
+            <div class="col-md-4"><h4 class="text-info fs-5 fw-bold">🍾 Nước Uống Đóng Chai</h4><div id="menu-bottle-list" class="list-group"></div></div>
         </div>
     </div>
 
-    <!-- TAB 4: ĐẶT HÀNG ONLINE -->
     <div class="container my-4 tab-section" id="tab-online-order" style="display:none;">
         <div class="card p-4 shadow-sm" style="max-width: 600px; margin: auto;">
             <h3 class="fw-bold fs-4 mb-3">Đặt Hàng Online</h3>
@@ -90,7 +86,6 @@
         </div>
     </div>
 
-    <!-- MODAL QUẢN LÝ BÀN / GỌI MÓN -->
     <div class="modal fade" id="roomActionModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-4">
@@ -133,7 +128,6 @@
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG NHẬP -->
     <div class="modal fade" id="loginModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
@@ -145,7 +139,6 @@
         </div>
     </div>
 
-    <!-- KHUNG IN HÓA ĐƠN MÁY IN NHIỆT -->
     <div id="printable-bill" style="display:none;">
         <div style="text-align: center; margin-bottom: 5px;">
             <h3 style="font-size: 14px; font-weight: bold; margin: 0;" id="bill-store-name">QUÁN ĂN DEMO</h3>
@@ -240,7 +233,6 @@
             document.getElementById('brand-name').innerText = settings.name || 'Quán ăn Demo';
             document.getElementById('page-title').innerText = settings.name || 'Quán ăn Demo';
             
-            // Gán giá trị Số điện thoại và Địa chỉ thành chữ màu trắng
             document.getElementById('header-phone').innerText = `📞 ${settings.phone || '0123456789'}`;
             document.getElementById('header-address').innerText = `📍 ${settings.address || 'Cà Mau'}`;
 
@@ -309,10 +301,18 @@
                     <span class="food-item-price">${Number(f.price).toLocaleString()}đ / ${f.unit || 'phần'}</span>
                 </div>
             `).join('');
-            document.getElementById('menu-drink-list').innerHTML = globalMenuData.filter(m => m.category === 'Đồ uống').map(d => `
+
+            document.getElementById('menu-drink-list').innerHTML = globalMenuData.filter(m => m.category === 'Đồ uống' && m.unit !== 'chai' && m.unit !== 'lon').map(d => `
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b class="food-item-title">${d.item_name}</b><br><small class="text-muted">${d.description || ''}</small></div>
-                    <span class="food-item-price">${Number(d.price).toLocaleString()}đ / ${d.unit || 'chai/lon'}</span>
+                    <span class="food-item-price">${Number(d.price).toLocaleString()}đ / ${d.unit || 'ly'}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('menu-bottle-list').innerHTML = globalMenuData.filter(m => m.unit === 'chai' || m.unit === 'lon' || m.category === 'Nước đóng chai').map(b => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div><b class="food-item-title">${b.item_name}</b><br><small class="text-muted">Đóng ${b.unit}</small></div>
+                    <span class="food-item-price">${Number(b.price).toLocaleString()}đ / ${b.unit}</span>
                 </div>
             `).join('');
         }
