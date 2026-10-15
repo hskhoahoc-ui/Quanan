@@ -16,60 +16,12 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || '2026-10-15T11:03:44.212754715Z 
-2026-10-15T11:03:44.212758696Z 3 vulnerabilities (2 moderate, 1 high)
-2026-10-15T11:03:44.212760077Z 
-2026-10-15T11:03:44.212761765Z To address all issues possible (including breaking changes), run:
-2026-10-15T11:03:44.212763551Z   npm audit fix --force
-2026-10-15T11:03:44.212765169Z 
-2026-10-15T11:03:44.212769571Z Some issues need review, and may require choosing
-2026-10-15T11:03:44.212770924Z a different dependency.
-2026-10-15T11:03:44.212772097Z 
-2026-10-15T11:03:44.212773456Z Run `npm audit` for details.
-2026-10-15T11:03:45.015609353Z ==> Uploading build...
-2026-10-15T11:03:47.388194473Z ==> Uploaded in 1.9s. Compression took 0.4s
-2026-10-15T11:03:47.388948594Z ==> Build successful 🎉
-2026-10-15T11:03:48.42082425Z ==> Deploying...
-2026-10-15T11:03:48.521949783Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
-2026-10-15T11:04:02.624364771Z ==> Running 'npm start'
-2026-10-15T11:04:03.82321847Z 
-2026-10-15T11:04:03.823255411Z > coffee-shop-management@1.0.0 start
-2026-10-15T11:04:03.823263081Z > node server.js
-2026-10-15T11:04:03.823265751Z 
-2026-10-15T11:04:05.525231218Z Server Quán ăn Demo đang chạy tại cổng 10000
-2026-10-15T11:04:06.890510606Z Lỗi khởi tạo DB: error: password authentication failed for user "postgres"
-2026-10-15T11:04:06.890542977Z     at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
-2026-10-15T11:04:06.890548347Z     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-2026-10-15T11:04:06.890553068Z     at async initDB (/opt/render/project/src/server.js:26:9) {
-2026-10-15T11:04:06.890555708Z   length: 71,
-2026-10-15T11:04:06.890559168Z   severity: 'FATAL',
-2026-10-15T11:04:06.890561848Z   code: '28P01',
-2026-10-15T11:04:06.890564288Z   detail: undefined,
-2026-10-15T11:04:06.890566808Z   hint: undefined,
-2026-10-15T11:04:06.890569238Z   position: undefined,
-2026-10-15T11:04:06.890573418Z   internalPosition: undefined,
-2026-10-15T11:04:06.890575828Z   internalQuery: undefined,
-2026-10-15T11:04:06.890578128Z   where: undefined,
-2026-10-15T11:04:06.890580348Z   schema: undefined,
-2026-10-15T11:04:06.890582599Z   table: undefined,
-2026-10-15T11:04:06.890585128Z   column: undefined,
-2026-10-15T11:04:06.890587428Z   dataType: undefined,
-2026-10-15T11:04:06.890589899Z   constraint: undefined,
-2026-10-15T11:04:06.890592349Z   file: undefined,
-2026-10-15T11:04:06.890594799Z   line: undefined,
-2026-10-15T11:04:06.890597619Z   routine: undefined
-2026-10-15T11:04:06.890600209Z }
-2026-10-15T11:04:09.701951912Z ==> Your service is live 🎉
-2026-10-15T11:04:09.784118223Z ==> 
-2026-10-15T11:04:09.790832968Z ==> ///////////////////////////////////////////////////////////
-2026-10-15T11:04:09.797764212Z ==> 
-2026-10-15T11:04:09.80604481Z ==> Available at your primary URL https://quanan-oszr.onrender.com
-2026-10-15T11:04:09.81031158Z ==> 
-2026-10-15T11:04:09.81457455Z ==> ///////////////////////////////////////////////////////////',
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     family: 4
 });
 
+// Khởi tạo toàn bộ Database và bảng dữ liệu đầy đủ
 async function initDB() {
     try {
         await pool.query(`
@@ -91,26 +43,107 @@ async function initDB() {
                 price NUMERIC,
                 import_price NUMERIC DEFAULT 0
             );
+            CREATE TABLE IF NOT EXISTS rooms (
+                id SERIAL PRIMARY KEY,
+                room_name TEXT,
+                status TEXT DEFAULT 'Trống',
+                customer_name TEXT
+            );
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                room_id INT,
+                item_id INT,
+                quantity INT,
+                total_price NUMERIC
+            );
+            CREATE TABLE IF NOT EXISTS online_orders (
+                id SERIAL PRIMARY KEY,
+                customer_name TEXT,
+                customer_phone TEXT,
+                delivery_address TEXT,
+                items_detail TEXT,
+                goods_total NUMERIC,
+                shipping_fee NUMERIC,
+                grand_total NUMERIC,
+                status TEXT,
+                created_date TEXT
+            );
+            CREATE TABLE IF NOT EXISTS bills (
+                id SERIAL PRIMARY KEY,
+                room_name TEXT,
+                goods_total NUMERIC,
+                discount_percent NUMERIC,
+                discount_amount NUMERIC,
+                grand_total NUMERIC,
+                total_import_cost NUMERIC,
+                items_detail TEXT,
+                created_date TEXT,
+                shipping_fee NUMERIC,
+                order_type TEXT,
+                payment_method TEXT
+            );
+            CREATE TABLE IF NOT EXISTS inventory (
+                id SERIAL PRIMARY KEY,
+                item_name TEXT,
+                category TEXT,
+                quantity NUMERIC,
+                unit TEXT,
+                import_price NUMERIC
+            );
+            CREATE TABLE IF NOT EXISTS expenses (
+                id SERIAL PRIMARY KEY,
+                category TEXT,
+                amount NUMERIC,
+                date TEXT,
+                note TEXT
+            );
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE,
                 password TEXT,
                 role TEXT
             );
+            CREATE TABLE IF NOT EXISTS promotions (
+                id SERIAL PRIMARY KEY,
+                content TEXT,
+                discount_percent NUMERIC,
+                active INT
+            );
         `);
 
-        // Thiết lập tên khởi tạo mặc định là "Quán ăn Demo" nếu chưa có
+        // Thiết lập tên khởi tạo mặc định là "Quán ăn Demo"
         const resSet = await pool.query(`SELECT * FROM settings LIMIT 1`);
         if (resSet.rows.length === 0) {
             await pool.query(`INSERT INTO settings (name, address, phone) VALUES ('Quán ăn Demo', 'Cà Mau', '0123456789')`);
         } else {
             await pool.query(`UPDATE settings SET name = 'Quán ăn Demo' WHERE name IS NULL OR name = ''`);
         }
+
+        // Tạo tài khoản admin và nhân viên mặc định nếu chưa có
+        const resUser = await pool.query(`SELECT * FROM users WHERE username = 'admin'`);
+        if (resUser.rows.length === 0) {
+            await pool.query(`INSERT INTO users (username, password, role) VALUES ('admin', '123456', 'admin')`);
+            await pool.query(`INSERT INTO users (username, password, role) VALUES ('nhanvien', '123456', 'staff')`);
+        }
+
+        // Tạo sẵn một số bàn mẫu nếu chưa có
+        const resRoom = await pool.query(`SELECT * FROM rooms`);
+        if (resRoom.rows.length === 0) {
+            for (let i = 1; i <= 8; i++) {
+                await pool.query(`INSERT INTO rooms (room_name, status) VALUES ($1, 'Trống')`, [`Bàn 0${i}`]);
+            }
+        }
+
+        console.log('Khởi tạo Database thành công!');
     } catch (err) {
         console.error('Lỗi khởi tạo DB:', err);
     }
 }
 initDB();
+
+io.on('connection', (socket) => {
+    console.log('Một thiết bị đã kết nối Realtime WebSocket');
+});
 
 // API Lấy cài đặt
 app.get('/api/settings', async (req, res) => {
@@ -170,6 +203,16 @@ app.delete('/api/menu/:id', async (req, res) => {
     try {
         await pool.query(`DELETE FROM menu WHERE id = $1`, [req.params.id]);
         res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API Lấy danh sách bàn
+app.get('/api/rooms', async (req, res) => {
+    try {
+        const result = await pool.query(`SELECT * FROM rooms ORDER BY id ASC`);
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
