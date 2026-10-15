@@ -163,10 +163,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Cài đặt & Banner
+// Cài đặt & Banner & Link QR
 app.get('/api/settings', async (req, res) => {
     const result = await pool.query(`SELECT * FROM settings LIMIT 1`);
-    res.json(result.rows[0] || { name: 'Quán ăn Demo' });
+    res.json(result.rows[0] || { name: 'Quán ăn Demo', qr_code: '' });
 });
 
 app.post('/api/settings', async (req, res) => {
@@ -212,10 +212,6 @@ app.post('/api/menu/save', async (req, res) => {
                 `INSERT INTO menu (item_name, category, image_url, description, unit, price) VALUES ($1, $2, $3, $4, $5, $6)`,
                 [item_name, category || 'Đồ ăn', image_url, description, unit || 'phần', price]
             );
-            await pool.query(
-                `INSERT INTO inventory (item_name, category, quantity, unit, import_price) VALUES ($1, $2, 100, $3, $4)`,
-                [item_name, category || 'Đồ ăn', unit || 'phần', price * 0.5]
-            );
         }
         res.json({ success: true });
     } catch (err) {
@@ -239,18 +235,7 @@ app.post('/api/rooms/open', async (req, res) => {
     await pool.query(`UPDATE rooms SET status = 'Đang phục vụ', customer_name = $1 WHERE id = $2`, [customer_name || 'Khách lẻ', room_id]);
     res.json({ success: true });
 });
-// Thêm API cài đặt có hỗ trợ qrcode
-app.get('/api/settings', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM settings LIMIT 1`);
-    res.json(result.rows[0] || { name: 'Quán ăn Demo', qr_code: '' });
-});
 
-app.post('/api/settings', async (req, res) => {
-    const { name, address, phone, qr_code, banners } = req.body;
-    await pool.query(`UPDATE settings SET name = $1, address = $2, phone = $3, qr_code = $4, banners = $5`, 
-        [name || 'Quán ăn Demo', address, phone, qr_code, banners]);
-    res.json({ success: true });
-});
 app.get('/api/admin/rooms', async (req, res) => {
     const result = await pool.query(`SELECT * FROM rooms ORDER BY id ASC`);
     res.json(result.rows);
@@ -271,7 +256,7 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Đặt món tại bàn & Realtime Audio
+// Đặt món tại bàn & Realtime
 const handleAddOrder = (req, res) => {
     const { room_id, item_id, quantity } = req.body;
     pool.query(`SELECT price, item_name FROM menu WHERE id = $1`, [item_id], (err, result) => {
@@ -298,7 +283,7 @@ app.get('/api/orders/:roomId', async (req, res) => {
     res.json(result.rows);
 });
 
-// Thanh toán & Chốt bàn (Trừ kho, phát âm thanh thanh toán)
+// Thanh toán & Chốt bàn (Trừ kho, phát âm thanh)
 app.post('/api/rooms/confirm-paid', async (req, res) => {
     const { room_id, payment_method } = req.body;
     const method = payment_method || 'Tiền mặt';
@@ -337,7 +322,7 @@ app.post('/api/rooms/confirm-paid', async (req, res) => {
     }
 });
 
-// Đặt hàng online & Báo âm thanh
+// Đặt hàng online
 app.post('/api/online-orders/submit', (req, res) => {
     const { customer_name, customer_phone, delivery_address, items } = req.body;
     const goods_total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -356,7 +341,7 @@ app.get('/api/admin/online-orders', async (req, res) => {
     res.json(result.rows);
 });
 
-// Duyệt đơn hàng online, trừ kho & in bill
+// Duyệt đơn online, trừ kho & in bill
 app.post('/api/admin/online-orders/checkout', async (req, res) => {
     const { order_id, shipping_fee, payment_method } = req.body;
     const orderRes = await pool.query(`SELECT * FROM online_orders WHERE id = $1`, [order_id]);
@@ -382,7 +367,7 @@ app.post('/api/admin/online-orders/checkout', async (req, res) => {
     res.json({ success: true, setting: setRes.rows[0], report: { room_name: `Online - ${order.customer_name}`, items, goodsTotal, shippingFee: ship, grandTotal } });
 });
 
-// Tồn kho
+// Kho hàng hóa (Tự động liên kết menu khi nhập chai/lon/đồ uống)
 app.get('/api/inventory', async (req, res) => {
     const result = await pool.query(`SELECT * FROM inventory ORDER BY id DESC`);
     res.json(result.rows);
@@ -390,9 +375,41 @@ app.get('/api/inventory', async (req, res) => {
 
 app.post('/api/inventory', async (req, res) => {
     const { item_name, category, quantity, unit, import_price } = req.body;
-    await pool.query(`INSERT INTO inventory (item_name, category, quantity, unit, import_price) VALUES ($1, $2, $3, $4, $5)`,
-        [item_name, category || 'Đồ ăn', quantity, unit, import_price]);
-    res.json({ success: true });
+    try {
+        await pool.query(`INSERT INTO inventory (item_name, category, quantity, unit, import_price) VALUES ($1, $2, $3, $4, $5)`,
+            [item_name, category || 'Đồ ăn', quantity, unit || 'phần', import_price]);
+
+        const checkMenu = await pool.query(`SELECT * FROM menu WHERE item_name = $1`, [item_name]);
+        if(checkMenu.rows.length === 0) {
+            const sellingPrice = Number(import_price) * 1.5;
+            await pool.query(`INSERT INTO menu (item_name, category, description, unit, price, import_price) VALUES ($1, $2, $3, $4, $5, $6)`,
+                [item_name, category || 'Đồ ăn', 'Hàng nhập kho', unit || 'phần', sellingPrice, import_price]);
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/inventory/update', async (req, res) => {
+    const { id, item_name, category, quantity, unit, import_price } = req.body;
+    try {
+        await pool.query(`UPDATE inventory SET item_name = $1, category = $2, quantity = $3, unit = $4, import_price = $5 WHERE id = $6`,
+            [item_name, category, quantity, unit, import_price, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/inventory/:id', async (req, res) => {
+    try {
+        await pool.query(`DELETE FROM inventory WHERE id = $1`, [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Nguyên liệu đầu vào
@@ -430,7 +447,7 @@ app.delete('/api/expenses/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Hóa đơn & Báo cáo doanh thu
+// Hóa đơn & Báo cáo
 app.get('/api/bills', async (req, res) => {
     const result = await pool.query(`SELECT * FROM bills ORDER BY id DESC`);
     res.json(result.rows);
@@ -462,7 +479,7 @@ app.get('/api/reports/revenue', async (req, res) => {
     res.json({ totalRevenue, totalExpense, netProfit });
 });
 
-// Xuất Excel (.xlsx) với đầy đủ 4 Sheet
+// Xuất file Excel (.xlsx) với 4 Sheet
 app.get('/api/reports/export-excel', async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     
@@ -522,7 +539,7 @@ app.get('/api/reports/export-excel', async (req, res) => {
     res.end();
 });
 
-// Quản lý tài khoản (Admin tạo/sửa/xóa)
+// Quản lý tài khoản
 app.get('/api/users', async (req, res) => {
     const result = await pool.query(`SELECT id, username, role FROM users`);
     res.json(result.rows);
