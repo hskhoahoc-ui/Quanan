@@ -11,6 +11,11 @@
         .room-busy { background-color: #f8d7da !important; cursor: pointer; transition: 0.2s; }
         .food-item-title { color: #0d6efd; font-weight: bold; }
         .food-item-price { color: #dc3545; font-weight: bold; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-bill, #printable-bill * { visibility: visible; }
+            #printable-bill { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; font-size: 12px; padding: 5px; }
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -21,12 +26,12 @@
                 <ul class="navbar-nav mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="switchTab('food-catalog', this)">Danh Mục Món Ăn</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('rooms', this)">Danh Sách Bàn</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('menu-price', this)">Bảng Giá Thực Đơn & Dịch Vụ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('online-order', this)">🛒 Đặt Hàng Online</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchTab('menu-price', this)">Bảng Giá Thực Đơn</a></li>
+                    <li class="nav-item"><a class="nav-link position-relative" href="#" onclick="switchTab('online-order', this)">🛒 Đặt Hàng Online <span id="online-count-badge" class="badge bg-danger" style="display:none;">0</span></a></li>
                 </ul>
                 <div class="d-flex align-items-center">
                     <span class="text-light me-3 small" id="user-info-display"></span>
-                    <a href="admin.html" class="btn btn-outline-light btn-sm me-2" id="admin-nav" style="display:none;">Khu Vực Quản Trị</a>
+                    <a href="admin.html" class="btn btn-outline-light btn-sm me-2" id="admin-nav" style="display:none;">Quản Trị</a>
                     <button class="btn btn-outline-warning btn-sm me-2" id="login-btn" onclick="openLoginModal()">Đăng Nhập</button>
                     <button class="btn btn-outline-danger btn-sm" id="logout-btn" style="display:none;" onclick="logout()">Đăng Xuất</button>
                 </div>
@@ -34,21 +39,19 @@
         </div>
     </nav>
 
-    <div id="banner-container" class="container my-3"></div>
-
-    <!-- TAB 1: DANH MỤC MÓN ĂN (3 MÓN/DÒNG) -->
+    <!-- TAB 1: DANH MỤC MÓN ĂN -->
     <div class="container my-4 tab-section" id="tab-food-catalog">
         <h3 class="fw-bold fs-4 mb-3">Danh Mục Món Ăn Hôm Nay</h3>
         <div class="row" id="food-catalog-container"></div>
     </div>
 
-    <!-- TAB 2: DANH SÁCH BÀN & GỌI MÓN -->
+    <!-- TAB 2: DANH SÁCH BÀN -->
     <div class="container my-4 tab-section" id="tab-rooms" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Sơ Đồ Bàn Phục Vụ</h3>
         <div class="row" id="room-container"></div>
     </div>
 
-    <!-- TAB 3: BẢNG GIÁ TÁCH ĐỒ ĂN / ĐỒ UỐNG -->
+    <!-- TAB 3: BẢNG GIÁ -->
     <div class="container my-4 tab-section" id="tab-menu-price" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Bảng Giá Thực Đơn & Dịch Vụ</h3>
         <div class="row">
@@ -70,63 +73,66 @@
         </div>
     </div>
 
-    <!-- MODAL MỞ BÀN / GỌI MÓN -->
+    <!-- MODAL GỌI MÓN / MỞ BÀN -->
     <div class="modal fade" id="roomActionModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-4">
                 <input type="hidden" id="modal-room-id">
                 <h4 class="fw-bold mb-3" id="modal-room-title">Bàn</h4>
-                <div id="open-room-section" class="mb-3">
+                
+                <div id="open-room-section" class="mb-3" style="display:none;">
                     <label>Tên khách hàng:</label>
                     <div class="input-group mt-1">
                         <input type="text" id="modal-customer-name" class="form-control" placeholder="Tên khách...">
-                        <button class="btn btn-success" onclick="openRoom()">Mở Bàn Phục V vụ</button>
+                        <button class="btn btn-success" onclick="openRoom()">Mở Bàn Phục Vụ (Nhân viên/Admin)</button>
                     </div>
                 </div>
+
                 <div id="active-room-section" style="display:none;">
                     <h5 class="text-primary">Danh sách món đã gọi:</h5>
                     <table class="table table-bordered">
                         <thead><tr><th>Món</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
                         <tbody id="modal-order-items"></tbody>
                     </table>
-                    <div class="mb-3 row">
-                        <div class="col-md-6">
-                            <label class="fw-bold">Chọn món thêm:</label>
-                            <select id="modal-menu-select" class="form-select"></select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="fw-bold">Số lượng:</label>
-                            <input type="number" id="modal-menu-qty" value="1" min="1" class="form-control">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button class="btn btn-primary w-100" onclick="addOrderToRoom()">Thêm Món</button>
-                        </div>
+                    <div id="staff-add-order-box" class="mb-3 row" style="display:none;">
+                        <div class="col-md-6"><select id="modal-menu-select" class="form-select"></select></div>
+                        <div class="col-md-3"><input type="number" id="modal-menu-qty" value="1" min="1" class="form-control"></div>
+                        <div class="col-md-3"><button class="btn btn-primary w-100" onclick="addOrderToRoom()">Thêm Món</button></div>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <label class="fw-bold me-2">Hình thức thanh toán:</label>
-                            <select id="modal-payment-method" class="form-select d-inline-block w-auto">
+                            <select id="modal-payment-method" class="form-select d-inline-block w-auto me-2">
                                 <option value="Tiền mặt">Tiền mặt</option>
                                 <option value="Chuyển khoản">Chuyển khoản</option>
                             </select>
+                            <button class="btn btn-outline-secondary" id="print-temp-bill-btn" onclick="printTempBill()" style="display:none;">🖨️ In Bill Tạm Tính</button>
                         </div>
-                        <button class="btn btn-danger fw-bold" onclick="confirmPayment()">Thanh Toán Thành Công & Đóng Bàn</button>
+                        <button class="btn btn-danger fw-bold" id="pay-confirm-btn" onclick="confirmPayment()" style="display:none;">Xác Thực Thanh Toán Thành Công</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL ĐĂNG NHẬP -->
-    <div class="modal fade" id="loginModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content p-4">
-                <h4 class="mb-3 fw-bold">Đăng Nhập Hệ Thống</h4>
-                <div class="mb-3"><label>Tài khoản:</label><input type="text" id="login-username" class="form-control"></div>
-                <div class="mb-3"><label>Mật khẩu:</label><input type="password" id="login-password" class="form-control"></div>
-                <button class="btn btn-primary w-100 fw-bold" onclick="submitLogin()">Đăng Nhập</button>
-            </div>
+    <!-- HÓA ĐƠN IN NHIỆT (ẨN KHI KHÔNG IN) -->
+    <div id="printable-bill" style="display:none;">
+        <h4 class="text-center fw-bold" id="bill-store-name">QUÁN ĂN DEMO</h4>
+        <p class="text-center small" id="bill-store-address"></p>
+        <hr>
+        <h5 class="text-center fw-bold">PHIẾU TẠM TÍNH</h5>
+        <div>Bàn: <span id="bill-room-name"></span></div>
+        <div>Thời gian: <span id="bill-time"></span></div>
+        <hr>
+        <table class="table table-sm">
+            <thead><tr><th>Món</th><th>SL</th><th>ĐG</th><th>T.T</th></tr></thead>
+            <tbody id="bill-items-list"></tbody>
+        </table>
+        <hr>
+        <div class="fw-bold text-end">Tổng cộng: <span id="bill-total-amount"></span></div>
+        <div class="text-center mt-2" id="bill-qr-box" style="display:none;">
+            <small>Quét mã QR chuyển khoản:</small><br>
+            <img id="bill-qr-img" src="" style="max-width: 100px;">
         </div>
     </div>
 
@@ -150,7 +156,8 @@
         });
 
         socket.on('online_order_new', () => {
-            speakVietnamese("Có đơn hàng online mới");
+            speakVietnamese("order online new");
+            checkOnlineOrdersCount();
         });
 
         socket.on('room_paid', (data) => {
@@ -165,30 +172,23 @@
             if(element) element.classList.add('active');
         }
 
-        function openLoginModal() { new bootstrap.Modal(document.getElementById('loginModal')).show(); }
-
-        async function submitLogin() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-            const data = await res.json();
-            if(data.success) {
-                localStorage.setItem('user', JSON.stringify(data.user));
-                alert('Đăng nhập thành công!');
-                window.location.href = 'admin.html';
-            } else { alert(data.error); }
+        async function checkOnlineOrdersCount() {
+            const res = await fetch('/api/admin/online-orders');
+            const orders = await res.json();
+            const pending = orders.filter(o => o.status === 'Chờ xác nhận').length;
+            const badge = document.getElementById('online-count-badge');
+            if(pending > 0) {
+                badge.innerText = pending;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         async function init() {
             const resSet = await fetch('/api/settings');
             const settings = await resSet.json();
             document.getElementById('brand-name').innerText = settings.name || 'Quán ăn Demo';
-            document.getElementById('page-title').innerText = settings.name || 'Quán ăn Demo';
-
-            if(settings.banners) {
-                const banners = settings.banners.split('\n').filter(b => b.trim() !== '');
-                if(banners.length > 0) document.getElementById('banner-container').innerHTML = `<img src="${banners[0]}" class="w-100 rounded shadow-sm" style="max-height: 250px; object-fit: cover;">`;
-            }
 
             const user = JSON.parse(localStorage.getItem('user'));
             if(user && (user.role === 'admin' || user.role === 'staff')) {
@@ -202,6 +202,7 @@
             loadMenuPriceTab();
             loadRooms();
             loadOnlineMenu();
+            checkOnlineOrdersCount();
         }
 
         async function loadFoodCatalog() {
@@ -255,15 +256,28 @@
         }
 
         async function openRoomModal(room) {
+            const user = JSON.parse(localStorage.getItem('user'));
             document.getElementById('modal-room-id').value = room.id;
             document.getElementById('modal-room-title').innerText = `${room.room_name} - Trạng thái: ${room.status}`;
+
             if(room.status === 'Trống') {
+                if(!user || (user.role !== 'admin' && user.role !== 'staff')) {
+                    alert('Chỉ có nhân viên hoặc admin mới có quyền mở bàn phục vụ!');
+                    return;
+                }
                 document.getElementById('open-room-section').style.display = 'block';
                 document.getElementById('active-room-section').style.display = 'none';
                 document.getElementById('modal-customer-name').value = `Khách ${room.room_name}`;
             } else {
                 document.getElementById('open-room-section').style.display = 'none';
                 document.getElementById('active-room-section').style.display = 'block';
+                
+                // Nếu là nhân viên hoặc admin thì hiện nút thêm món, in bill, thanh toán
+                if(user && (user.role === 'admin' || user.role === 'staff')) {
+                    document.getElementById('staff-add-order-box').style.display = 'flex';
+                    document.getElementById('print-temp-bill-btn').style.display = 'inline-block';
+                    document.getElementById('pay-confirm-btn').style.display = 'inline-block';
+                }
                 loadRoomOrders(room.id);
                 loadMenuSelect();
             }
@@ -300,13 +314,40 @@
             loadRoomOrders(room_id);
         }
 
+        async function printTempBill() {
+            const room_id = document.getElementById('modal-room-id').value;
+            const res = await fetch(`/api/orders/${room_id}`);
+            const orders = await res.json();
+            const setRes = await fetch('/api/settings');
+            const setting = await setRes.json();
+
+            document.getElementById('bill-store-name').innerText = setting.name || 'Quán ăn Demo';
+            document.getElementById('bill-store-address').innerText = setting.address || '';
+            document.getElementById('bill-room-name').innerText = document.getElementById('modal-room-title').innerText;
+            document.getElementById('bill-time').innerText = new Date().toLocaleString();
+
+            let total = 0;
+            document.getElementById('bill-items-list').innerHTML = orders.map(o => {
+                total += Number(o.total_price);
+                return `<tr><td>${o.item_name}</td><td>${o.quantity}</td><td>${(o.total_price/o.quantity).toLocaleString()}</td><td>${o.total_price.toLocaleString()}</td></tr>`;
+            }).join('');
+            document.getElementById('bill-total-amount').innerText = total.toLocaleString() + 'đ';
+
+            if(setting.qr_code) {
+                document.getElementById('bill-qr-img').src = setting.qr_code;
+                document.getElementById('bill-qr-box').style.display = 'block';
+            }
+
+            window.print();
+        }
+
         async function confirmPayment() {
             const room_id = document.getElementById('modal-room-id').value;
             const payment_method = document.getElementById('modal-payment-method').value;
             const res = await fetch('/api/rooms/confirm-paid', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ room_id, payment_method }) });
             const data = await res.json();
             if(data.success) {
-                alert('Thanh toán thành công!');
+                alert('Xác nhận thanh toán thành công!');
                 location.reload();
             }
         }
