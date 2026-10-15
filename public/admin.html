@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>Trang Quản Trị - Quán ăn Demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printable-bill, #printable-bill * { visibility: visible; }
+            #printable-bill { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; font-size: 12px; padding: 5px; }
+        }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark px-4">
@@ -12,10 +19,10 @@
     </nav>
 
     <div class="container my-4">
-        <ul class="nav nav-tabs mb-4" role="tablist">
+        <ul class="nav nav-tabs mb-4" role="tablist" id="admin-tabs">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-tab">Quản Lý Món Ăn/Uống</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#rooms-tab">Quản Lý Bàn</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#online-orders-tab">🛒 Đơn Hàng Online</button></li>
+            <li class="nav-item"><button class="nav-link position-relative" data-bs-toggle="tab" data-bs-target="#online-orders-tab" onclick="loadOnlineOrders()">🛒 Đơn Hàng Online <span id="admin-online-badge" class="badge bg-danger" style="display:none;">0</span></button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inventory-tab">📦 Kho Hàng Hóa</button></li>
             <li class="nav-item" id="nav-ingredients"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ingredients-tab">Nguyên Liệu Đầu Vào</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#expenses-tab">Chi Phí Quán</button></li>
@@ -25,7 +32,7 @@
         </ul>
 
         <div class="tab-content">
-            <!-- MÓN ĂN -->
+            <!-- QUẢN LÝ MÓN ĂN / UỐNG -->
             <div class="tab-pane fade show active" id="menu-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4 shadow-sm">
@@ -33,13 +40,18 @@
                         <input type="hidden" id="m-id">
                         <div class="mb-3"><label class="fw-bold">Tên món:</label><input type="text" id="m-name" class="form-control"></div>
                         <div class="mb-3"><label class="fw-bold">Danh mục:</label><select id="m-cat" class="form-select"><option value="Đồ ăn">Đồ ăn</option><option value="Đồ uống">Đồ uống</option></select></div>
-                        <div class="mb-3"><label class="fw-bold">Ảnh (Postimg.cc):</label><input type="text" id="m-image" class="form-control"></div>
+                        <div class="mb-3"><label class="fw-bold">Ảnh (Postimg.cc):</label><input type="text" id="m-image" class="form-control" placeholder="Link ảnh..."></div>
                         <div class="mb-3"><label class="fw-bold">Mô tả:</label><textarea id="m-desc" class="form-control" rows="2"></textarea></div>
                         <div class="mb-3"><label class="fw-bold">Đơn vị (chai, lon, phần...):</label><input type="text" id="m-unit" class="form-control"></div>
-                        <div class="mb-3"><label class="fw-bold">Giá Bán:</label><input type="number" id="m-price" class="form-control"></div>
+                        <div class="mb-3"><label class="fw-bold">Giá Bán (VNĐ):</label><input type="number" id="m-price" class="form-control"></div>
                         <button class="btn btn-success w-100 fw-bold" onclick="saveMenu()">Lưu Món</button>
                     </div>
-                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Tên</th><th>Danh Mục</th><th>Giá</th><th>Xóa</th></tr></thead><tbody id="menu-table"></tbody></table></div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white align-middle">
+                            <thead><tr><th>Ảnh</th><th>Tên</th><th>Danh Mục</th><th>Giá</th><th>Thao Tác</th></tr></thead>
+                            <tbody id="menu-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -47,11 +59,16 @@
             <div class="tab-pane fade" id="rooms-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
-                        <h4>Thêm Bàn</h4>
-                        <div class="mb-3"><label>Tên bàn:</label><input type="text" id="r-name" class="form-control"></div>
+                        <h4>Thêm / Sửa Bàn</h4>
+                        <div class="mb-3"><label>Tên bàn:</label><input type="text" id="r-name" class="form-control" placeholder="VD: Bàn 01, VIP 1..."></div>
                         <button class="btn btn-success" onclick="saveRoom()">Lưu Bàn</button>
                     </div>
-                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Bàn</th><th>Trạng thái</th><th>Xóa</th></tr></thead><tbody id="admin-room-table"></tbody></table></div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Bàn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                            <tbody id="admin-room-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -59,36 +76,48 @@
             <div class="tab-pane fade" id="online-orders-tab">
                 <div class="card p-4">
                     <h4 class="mb-3">Danh Sách Đơn Hàng Online</h4>
-                    <table class="table table-bordered bg-white align-middle">
-                        <thead><tr><th>ID</th><th>Khách</th><th>SĐT & Địa chỉ</th><th>Món</th><th>Tiền hàng</th><th>Phí ship</th><th>Tổng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-                        <tbody id="admin-online-orders-table"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered bg-white align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Khách</th><th>SĐT & Địa chỉ</th><th>Món</th>
+                                    <th>Tiền hàng</th><th>Phí ship</th><th>Tổng</th><th>Trạng thái</th><th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-online-orders-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- KHO HÀNG HÓA -->
             <div class="tab-pane fade" id="inventory-tab">
                 <div class="card p-4">
-                    <h4 class="mb-3">Kiểm Soát Tồn Kho Hàng Hóa (Trừ kho tự động khi bán chai/lon/đồ ăn)</h4>
-                    <table class="table table-bordered bg-white">
+                    <h4 class="mb-3">Kiểm Soát Tồn Kho Hàng Hóa</h4>
+                    <table class="table table-bordered bg-white align-middle">
                         <thead><tr><th>Tên Hàng</th><th>Danh Mục</th><th>Tồn Kho</th><th>Đơn Vị</th><th>Giá Nhập</th></tr></thead>
                         <tbody id="inventory-table"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- NGUYÊN LIỆU (Nhân viên bị ẩn) -->
+            <!-- NGUYÊN LIỆU ĐẦU VÀO -->
             <div class="tab-pane fade" id="ingredients-tab">
                 <div class="row">
                     <div class="col-md-5 card p-4">
                         <h4>Nhập Nguyên Liệu Đầu Vào</h4>
-                        <div class="mb-3"><label>Tên:</label><input type="text" id="ing-name" class="form-control"></div>
-                        <div class="mb-3"><label>SL:</label><input type="number" id="ing-qty" class="form-control"></div>
-                        <div class="mb-3"><label>Đơn vị:</label><input type="text" id="ing-unit" class="form-control"></div>
+                        <div class="mb-3"><label>Tên nguyên liệu:</label><input type="text" id="ing-name" class="form-control"></div>
+                        <div class="mb-3"><label>Số lượng:</label><input type="number" id="ing-qty" class="form-control"></div>
+                        <div class="mb-3"><label>Đơn vị:</label><input type="text" id="ing-unit" class="form-control" placeholder="kg, lít, gói..."></div>
                         <div class="mb-3"><label>Giá nhập:</label><input type="number" id="ing-price" class="form-control"></div>
-                        <button class="btn btn-success" onclick="saveIngredient()">Thêm</button>
+                        <button class="btn btn-success" onclick="saveIngredient()">Thêm Nguyên Liệu</button>
                     </div>
-                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Tên</th><th>SL</th><th>ĐV</th><th>Giá</th><th>Xóa</th></tr></thead><tbody id="ingredients-table"></tbody></table></div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Tên</th><th>SL</th><th>ĐV</th><th>Giá</th><th>Xóa</th></tr></thead>
+                            <tbody id="ingredients-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -100,9 +129,14 @@
                         <div class="mb-3"><label>Loại:</label><select id="e-cat" class="form-select"><option value="Lương">Lương</option><option value="Điện">Điện</option><option value="Nước">Nước</option><option value="Khác">Khác</option></select></div>
                         <div class="mb-3"><label>Số tiền:</label><input type="number" id="e-amount" class="form-control"></div>
                         <div class="mb-3"><label>Ngày:</label><input type="date" id="e-date" class="form-control"></div>
-                        <button class="btn btn-danger" onclick="saveExpense()">Lưu</button>
+                        <button class="btn btn-danger" onclick="saveExpense()">Lưu Chi Phí</button>
                     </div>
-                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Loại</th><th>Số tiền</th><th>Ngày</th><th>Xóa</th></tr></thead><tbody id="expense-table"></tbody></table></div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Loại</th><th>Số tiền</th><th>Ngày</th><th>Xóa</th></tr></thead>
+                            <tbody id="expense-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -124,8 +158,8 @@
                 </div>
                 <div class="card p-4">
                     <h4 class="mb-3">Chi Tiết Các Hóa Đơn & In Lại Bill</h4>
-                    <table class="table table-bordered bg-white">
-                        <thead><tr><th>Mã Bill</th><th>Bàn/Khách</th><th>Tổng Tiền</th><th>Hình thức</th><th>Ngày</th><th>In lại</th></tr></thead>
+                    <table class="table table-bordered bg-white align-middle">
+                        <thead><tr><th>Mã Bill</th><th>Bàn/Khách</th><th>Tổng Tiền</th><th>Hình thức</th><th>Ngày</th><th>Thao tác</th></tr></thead>
                         <tbody id="admin-bills-table"></tbody>
                     </table>
                 </div>
@@ -142,24 +176,69 @@
                         <div class="mb-3"><label>Quyền:</label><select id="u-role" class="form-select"><option value="staff">Nhân viên</option><option value="admin">Admin</option></select></div>
                         <button class="btn btn-primary" onclick="saveUser()">Lưu Tài Khoản</button>
                     </div>
-                    <div class="col-md-7"><table class="table table-bordered bg-white"><thead><tr><th>Tài khoản</th><th>Quyền</th><th>Xóa</th></tr></thead><tbody id="user-table"></tbody></table></div>
+                    <div class="col-md-7">
+                        <table class="table table-bordered bg-white">
+                            <thead><tr><th>Tài khoản</th><th>Quyền</th><th>Thao tác</th></tr></thead>
+                            <tbody id="user-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- CÀ ĐẶT -->
+            <!-- CÀ ĐẶT QUÁN & LINK QR -->
             <div class="tab-pane fade" id="settings-tab">
                 <div class="card p-4 shadow-sm" style="max-width: 600px;">
-                    <h4 class="mb-3">Cài Đặt Quán</h4>
+                    <h4 class="mb-3">Cài Đặt Thông Tin & Link QR</h4>
                     <div class="mb-3"><label>Tên cơ sở:</label><input type="text" id="s-name" class="form-control"></div>
                     <div class="mb-3"><label>Địa chỉ:</label><input type="text" id="s-address" class="form-control"></div>
-                    <button class="btn btn-primary" onclick="saveSettings()">Lưu</button>
+                    <div class="mb-3"><label>Link mã QR thanh toán:</label><input type="text" id="s-qr" class="form-control" placeholder="https://..."></div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Lưu Cài Đặt</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IN BILL -->
+    <div class="modal fade" id="billModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 350px;">
+            <div class="modal-content p-3" id="printable-bill" style="font-family: monospace;">
+                <div class="text-center mb-2">
+                    <h5 class="fw-bold mb-0" id="bill-facility-name">QUÁN ĂN DEMO</h5>
+                    <small id="bill-address"></small>
+                    <hr style="border-top: dashed 1px #000; margin: 5px 0;">
+                    <h6 class="fw-bold mb-1">HÓA ĐƠN THANH TOÁN</h6>
+                    <div class="d-flex justify-content-between small">
+                        <span id="bill-room"></span>
+                        <span id="bill-time-print"></span>
+                    </div>
+                    <div class="small text-center mt-1">Hình thức: <b id="bill-payment-method">Tiền mặt</b></div>
+                    <hr style="border-top: dashed 1px #000; margin: 5px 0;">
+                </div>
+                <table class="table table-sm table-borderless mb-2" style="font-size: 11px;">
+                    <thead><tr class="border-bottom"><th>Món</th><th>SL</th><th>ĐG</th><th class="text-end">T.Tiền</th></tr></thead>
+                    <tbody id="bill-items"></tbody>
+                </table>
+                <hr style="border-top: dashed 1px #000; margin: 5px 0;">
+                <div class="d-flex justify-content-between fw-bold fs-6">
+                    <span>TỔNG CỘNG:</span>
+                    <span class="text-danger" id="bill-total">0đ</span>
+                </div>
+                <div class="text-center mt-2" id="bill-qr-container">
+                    <small>Quét mã QR thanh toán:</small><br>
+                    <img id="bill-qr-img" src="" style="max-height: 100px;" class="img-fluid mt-1">
+                </div>
+                <div class="text-center mt-3 d-print-none">
+                    <button class="btn btn-primary btn-sm me-2" onclick="window.print()">In Hóa Đơn</button>
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
         const user = JSON.parse(localStorage.getItem('user'));
         if(!user || (user.role !== 'admin' && user.role !== 'staff')) { alert('Vui lòng đăng nhập!'); window.location.href = 'index.html'; }
 
@@ -171,18 +250,27 @@
             document.getElementById('admin-user-badge').innerText = 'Quản Trị (Admin)';
         }
 
+        socket.on('online_order_new', () => { loadOnlineOrders(); });
+
         async function loadAll() {
             const sRes = await fetch('/api/settings'); const s = await sRes.json();
             document.getElementById('s-name').value = s.name || '';
             document.getElementById('s-address').value = s.address || '';
+            document.getElementById('s-qr').value = s.qr_code || '';
 
             const mRes = await fetch('/api/menu'); const menu = await mRes.json();
-            document.getElementById('menu-table').innerHTML = menu.map(m => `<tr><td>${m.item_name}</td><td>${m.category}</td><td>${Number(m.price).toLocaleString()}đ</td><td><button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">Xóa</button></td></tr>`).join('');
+            document.getElementById('menu-table').innerHTML = menu.map(m => `
+                <tr>
+                    <td><img src="${m.image_url || 'https://via.placeholder.com/40'}" style="width:40px;height:40px;object-fit:cover;" class="rounded"></td>
+                    <td><b>${m.item_name}</b></td><td>${m.category}</td><td class="text-danger">${Number(m.price).toLocaleString()}đ</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">Xóa</button></td>
+                </tr>
+            `).join('');
 
             loadAdminRooms();
             loadOnlineOrders();
             loadInventory();
-            loadIngredients();
+            if(user.role === 'admin') loadIngredients();
             loadExpenses();
             loadReport();
             loadBillsTable();
@@ -218,24 +306,53 @@
 
         async function loadOnlineOrders() {
             const res = await fetch('/api/admin/online-orders'); const orders = await res.json();
+            const pending = orders.filter(o => o.status === 'Chờ xác nhận').length;
+            const badge = document.getElementById('admin-online-badge');
+            if(pending > 0) { badge.innerText = pending; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
+
             document.getElementById('admin-online-orders-table').innerHTML = orders.map(o => `
                 <tr>
                     <td>#${o.id}</td><td><b>${o.customer_name}</b></td><td>${o.customer_phone}<br>${o.delivery_address}</td>
                     <td><small>${JSON.parse(o.items_detail).map(i => `${i.item_name} x${i.quantity}`).join(', ')}</small></td>
                     <td>${o.goods_total.toLocaleString()}đ</td>
-                    <td><input type="number" id="ship-fee-${o.id}" value="${o.shipping_fee || 0}" class="form-control form-control-sm" style="width: 80px;"></td>
-                    <td class="fw-bold text-danger">${o.grand_total.toLocaleString()}đ</td>
+                    <td><input type="number" id="ship-fee-${o.id}" value="${o.shipping_fee || 0}" class="form-control form-control-sm" style="width: 80px;" oninput="updateGrandTotal(${o.id}, ${o.goods_total})"></td>
+                    <td class="fw-bold text-danger" id="grand-total-${o.id}">${o.grand_total.toLocaleString()}đ</td>
                     <td><span class="badge ${o.status === 'Đã hoàn thành' ? 'bg-success':'bg-warning'}">${o.status}</span></td>
-                    <td>${o.status === 'Chờ xác nhận' ? `<button class="btn btn-sm btn-success" onclick="processOnlineOrder(${o.id})">Duyệt & In Bill</button>`:''}</td>
+                    <td>${o.status === 'Chờ xác nhận' ? `<button class="btn btn-sm btn-success" onclick="processOnlineOrder(${o.id})">Duyệt & In Bill</button>`:'<span class="text-muted">Đã duyệt</span>'}</td>
                 </tr>
             `).join('');
+        }
+
+        function updateGrandTotal(id, goodsTotal) {
+            const ship = parseFloat(document.getElementById(`ship-fee-${id}`).value) || 0;
+            document.getElementById(`grand-total-${id}`).innerText = (goodsTotal + ship).toLocaleString() + 'đ';
         }
 
         async function processOnlineOrder(orderId) {
             const shipping_fee = document.getElementById(`ship-fee-${orderId}`).value || 0;
             const res = await fetch('/api/admin/online-orders/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: orderId, shipping_fee, payment_method: 'Chuyển khoản' }) });
             const data = await res.json();
-            if(data.success) { alert('Đã duyệt đơn và trừ tồn kho!'); loadOnlineOrders(); loadBillsTable(); }
+            if(data.success) {
+                alert('Đã duyệt đơn và trừ tồn kho!');
+                loadOnlineOrders(); loadBillsTable(); loadInventory();
+
+                const setting = data.setting;
+                const report = data.report;
+                document.getElementById('bill-facility-name').innerText = setting.name;
+                document.getElementById('bill-address').innerText = setting.address || '';
+                document.getElementById('bill-room').innerText = report.room_name;
+                document.getElementById('bill-time-print').innerText = new Date().toLocaleTimeString();
+                document.getElementById('bill-payment-method').innerText = 'Chuyển khoản';
+                if(setting.qr_code) document.getElementById('bill-qr-img').src = setting.qr_code;
+
+                let html = '';
+                report.items.forEach(i => {
+                    html += `<tr><td>${i.item_name}</td><td>${i.quantity}</td><td>${(i.price).toLocaleString()}</td><td class="text-end">${(i.price * i.quantity).toLocaleString()}</td></tr>`;
+                });
+                document.getElementById('bill-items').innerHTML = html;
+                document.getElementById('bill-total').innerText = report.grandTotal.toLocaleString() + 'đ';
+                new bootstrap.Modal(document.getElementById('billModal')).show();
+            }
         }
 
         async function loadInventory() {
@@ -287,11 +404,33 @@
         async function loadBillsTable() {
             const res = await fetch('/api/bills'); const bills = await res.json();
             document.getElementById('admin-bills-table').innerHTML = bills.map(b => `
-                <tr><td>#${b.id}</td><td><b>${b.room_name}</b></td><td class="text-danger fw-bold">${b.grand_total.toLocaleString()}đ</td><td><span class="badge bg-primary">${b.payment_method || 'Tiền mặt'}</span></td><td>${b.created_date}</td><td><button class="btn btn-sm btn-outline-primary" onclick='reprintBill(${JSON.stringify(b)})'>🖨️ In Lại</button></td></tr>
+                <tr>
+                    <td>#${b.id}</td><td><b>${b.room_name}</b></td><td class="text-danger fw-bold">${b.grand_total.toLocaleString()}đ</td>
+                    <td><span class="badge bg-primary">${b.payment_method || 'Tiền mặt'}</span></td><td>${b.created_date}</td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick='reprintBill(${JSON.stringify(b)})'>🖨️ In Lại</button></td>
+                </tr>
             `).join('');
         }
 
-        function reprintBill(b) { alert(`Hóa đơn #${b.id} - Bàn/Khách: ${b.room_name} - Tổng tiền: ${b.grand_total.toLocaleString()}đ`); }
+        async function reprintBill(b) {
+            const sRes = await fetch('/api/settings'); const setting = await sRes.json();
+            document.getElementById('bill-facility-name').innerText = setting.name;
+            document.getElementById('bill-address').innerText = setting.address || '';
+            document.getElementById('bill-room').innerText = b.room_name;
+            document.getElementById('bill-time-print').innerText = b.created_date;
+            document.getElementById('bill-payment-method').innerText = b.payment_method || 'Tiền mặt';
+            if(setting.qr_code) document.getElementById('bill-qr-img').src = setting.qr_code;
+
+            const items = JSON.parse(b.items_detail);
+            let html = '';
+            items.forEach(i => {
+                const price = i.price || (i.total_price / i.quantity);
+                html += `<tr><td>${i.item_name}</td><td>${i.quantity}</td><td>${price.toLocaleString()}</td><td class="text-end">${(price * i.quantity).toLocaleString()}</td></tr>`;
+            });
+            document.getElementById('bill-items').innerHTML = html;
+            document.getElementById('bill-total').innerText = b.grand_total.toLocaleString() + 'đ';
+            new bootstrap.Modal(document.getElementById('billModal')).show();
+        }
 
         function exportExcel() { window.location.href = '/api/reports/export-excel'; }
 
@@ -311,8 +450,15 @@
         async function deleteUser(id) { if(confirm('Xóa tài khoản?')) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
 
         async function saveSettings() {
-            await fetch('/api/settings', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: document.getElementById('s-name').value, address: document.getElementById('s-address').value }) });
-            alert('Lưu thành công!');
+            await fetch('/api/settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('s-name').value,
+                    address: document.getElementById('s-address').value,
+                    qr_code: document.getElementById('s-qr').value
+                })
+            });
+            alert('Lưu cài đặt thành công!');
         }
 
         loadAll();
