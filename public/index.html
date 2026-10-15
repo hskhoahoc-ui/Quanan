@@ -12,26 +12,23 @@
         .food-item-title { color: #0d6efd; font-weight: bold; }
         .food-item-price { color: #dc3545; font-weight: bold; }
 
-        /* Định dạng chuẩn máy in nhiệt cho hóa đơn tạm tính */
         @media print {
             body * { visibility: hidden; }
             #printable-bill, #printable-bill * { visibility: visible; }
             #printable-bill {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 72mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 11px;
-                color: #000;
-                padding: 2mm;
-                background: #fff;
+                position: absolute; left: 0; top: 0; width: 72mm;
+                font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; padding: 2mm; background: #fff;
             }
-            .no-print { display: none !important; }
         }
     </style>
 </head>
 <body class="bg-light">
+    <!-- TIÊU ĐỀ: DÒNG TRÊN SỐ ĐIỆN THOẠI, DÒNG DƯỚI ĐỊA CHỈ -->
+    <div class="bg-dark text-white text-center py-2 border-bottom border-secondary">
+        <div class="fw-bold" id="header-phone" style="font-size: 14px;">📞 Điện thoại: 0123456789</div>
+        <div class="small text-light" id="header-address" style="font-size: 12px;">📍 Địa chỉ: Cà Mau</div>
+    </div>
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 py-2 shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><span id="brand-name">Quán ăn Demo</span></a>
@@ -56,16 +53,16 @@
     <!-- BANNER QUẢNG CÁO -->
     <div id="banner-container" class="container my-3"></div>
 
-    <!-- TAB 1: DANH MỤC MÓN ĂN (3 MÓN/DÒNG, TÁCH ĐỒ ĂN / ĐỒ UỐNG) -->
+    <!-- TAB 1: DANH MỤC MÓN ĂN VỚI NÚT LỌC MÓN ĂN / MÓN UỐNG -->
     <div class="container my-4 tab-section" id="tab-food-catalog">
-        <h3 class="fw-bold fs-4 mb-3">🍲 Danh Mục Món Ăn</h3>
-        <div class="row mb-5" id="food-catalog-container"></div>
-        
-        <h3 class="fw-bold fs-4 mb-3">🥤 Danh Mục Đồ Uống</h3>
-        <div class="row" id="drink-catalog-container"></div>
+        <div class="d-flex gap-2 mb-4">
+            <button class="btn btn-primary fw-bold" id="btn-filter-food" onclick="filterCatalog('food')">🍲 Danh Mục Món Ăn</button>
+            <button class="btn btn-outline-primary fw-bold" id="btn-filter-drink" onclick="filterCatalog('drink')">🥤 Danh Mục Món Uống</button>
+        </div>
+        <div class="row" id="catalog-display-container"></div>
     </div>
 
-    <!-- TAB 2: DANH SÁCH BÀN & QUẢN LÝ GỌI MÓN -->
+    <!-- TAB 2: DANH SÁCH BÀN & GỌI MÓN -->
     <div class="container my-4 tab-section" id="tab-rooms" style="display:none;">
         <h3 class="fw-bold fs-4 mb-3">Sơ Đồ Bàn Phục Vụ</h3>
         <div class="row" id="room-container"></div>
@@ -148,7 +145,7 @@
         </div>
     </div>
 
-    <!-- KHUNG IN HÓA ĐƠN MÁY IN NHIỆT (ẨN TRÊN WEB, CHỈ HIỆN KHI IN) -->
+    <!-- KHUNG IN HÓA ĐƠN MÁY IN NHIỆT -->
     <div id="printable-bill" style="display:none;">
         <div style="text-align: center; margin-bottom: 5px;">
             <h3 style="font-size: 14px; font-weight: bold; margin: 0;" id="bill-store-name">QUÁN ĂN DEMO</h3>
@@ -190,6 +187,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const socket = io();
+        let globalMenuData = [];
 
         function speakVietnamese(text) {
             if ('speechSynthesis' in window) {
@@ -241,6 +239,10 @@
             const settings = await resSet.json();
             document.getElementById('brand-name').innerText = settings.name || 'Quán ăn Demo';
             document.getElementById('page-title').innerText = settings.name || 'Quán ăn Demo';
+            
+            // Hiển thị số điện thoại dòng trên, địa chỉ dòng dưới
+            document.getElementById('header-phone').innerText = `📞 Điện thoại: ${settings.phone || '0123456789'}`;
+            document.getElementById('header-address').innerText = `📍 Địa chỉ: ${settings.address || 'Cà Mau'}`;
 
             if(settings.banners) {
                 const banners = settings.banners.split('\n').filter(b => b.trim() !== '');
@@ -255,20 +257,37 @@
                 document.getElementById('logout-btn').style.display = 'inline-block';
             }
 
-            loadFoodCatalog();
+            const resMenu = await fetch('/api/menu');
+            globalMenuData = await resMenu.json();
+
+            filterCatalog('food');
             loadMenuPriceTab();
             loadRooms();
             loadOnlineMenu();
             checkOnlineOrdersCount();
         }
 
-        async function loadFoodCatalog() {
-            const res = await fetch('/api/menu');
-            const menu = await res.json();
-            const foods = menu.filter(m => m.category === 'Đồ ăn');
-            const drinks = menu.filter(m => m.category === 'Đồ uống');
+        // Hàm lọc hiển thị Danh mục Món Ăn hoặc Món Uống
+        function filterCatalog(type) {
+            const btnFood = document.getElementById('btn-filter-food');
+            const btnDrink = document.getElementById('btn-filter-drink');
+            const container = document.getElementById('catalog-display-container');
 
-            document.getElementById('food-catalog-container').innerHTML = foods.map(item => `
+            if(type === 'food') {
+                btnFood.className = 'btn btn-primary fw-bold';
+                btnDrink.className = 'btn btn-outline-primary fw-bold';
+                const foods = globalMenuData.filter(m => m.category === 'Đồ ăn');
+                container.innerHTML = foods.length > 0 ? foods.map(item => renderFoodCard(item)).join('') : '<p class="text-muted">Chưa có món ăn nào.</p>';
+            } else {
+                btnDrink.className = 'btn btn-primary fw-bold';
+                btnFood.className = 'btn btn-outline-primary fw-bold';
+                const drinks = globalMenuData.filter(m => m.category === 'Đồ uống');
+                container.innerHTML = drinks.length > 0 ? drinks.map(item => renderFoodCard(item)).join('') : '<p class="text-muted">Chưa có đồ uống nào.</p>';
+            }
+        }
+
+        function renderFoodCard(item) {
+            return `
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm border">
                         <img src="${item.image_url || 'https://via.placeholder.com/300x200?text=Quán+ăn+Demo'}" class="card-img-top" style="height: 180px; object-fit: cover;">
@@ -281,34 +300,17 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
-
-            document.getElementById('drink-catalog-container').innerHTML = drinks.map(item => `
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border">
-                        <img src="${item.image_url || 'https://via.placeholder.com/300x200?text=Đồ+Uống'}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <div><h5 class="food-item-title">${item.item_name}</h5><p class="text-muted small mb-2">${item.description || ''}</p></div>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="food-item-price fs-5">${Number(item.price).toLocaleString()}đ</span>
-                                <span class="badge bg-primary">${item.unit || 'chai/lon'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+            `;
         }
 
         async function loadMenuPriceTab() {
-            const res = await fetch('/api/menu');
-            const menu = await res.json();
-            document.getElementById('menu-food-list').innerHTML = menu.filter(m => m.category === 'Đồ ăn').map(f => `
+            document.getElementById('menu-food-list').innerHTML = globalMenuData.filter(m => m.category === 'Đồ ăn').map(f => `
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b class="food-item-title">${f.item_name}</b><br><small class="text-muted">${f.description || ''}</small></div>
                     <span class="food-item-price">${Number(f.price).toLocaleString()}đ / ${f.unit || 'phần'}</span>
                 </div>
             `).join('');
-            document.getElementById('menu-drink-list').innerHTML = menu.filter(m => m.category === 'Đồ uống').map(d => `
+            document.getElementById('menu-drink-list').innerHTML = globalMenuData.filter(m => m.category === 'Đồ uống').map(d => `
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b class="food-item-title">${d.item_name}</b><br><small class="text-muted">${d.description || ''}</small></div>
                     <span class="food-item-price">${Number(d.price).toLocaleString()}đ / ${d.unit || 'chai/lon'}</span>
@@ -369,9 +371,7 @@
         }
 
         async function loadMenuSelect() {
-            const res = await fetch('/api/menu');
-            const menu = await res.json();
-            document.getElementById('modal-menu-select').innerHTML = menu.map(m => `<option value="${m.id}">${m.item_name} - ${Number(m.price).toLocaleString()}đ</option>`).join('');
+            document.getElementById('modal-menu-select').innerHTML = globalMenuData.map(m => `<option value="${m.id}">${m.item_name} - ${Number(m.price).toLocaleString()}đ</option>`).join('');
         }
 
         async function addOrderToRoom() {
@@ -427,9 +427,7 @@
         }
 
         async function loadOnlineMenu() {
-            const res = await fetch('/api/menu');
-            const menu = await res.json();
-            document.getElementById('online-menu-checkboxes').innerHTML = menu.map(m => `
+            document.getElementById('online-menu-checkboxes').innerHTML = globalMenuData.map(m => `
                 <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
                     <div><b>${m.item_name}</b> - <span class="text-danger">${Number(m.price).toLocaleString()}đ</span></div>
                     <input type="number" id="online-qty-${m.id}" value="0" min="0" class="form-control form-control-sm" style="width: 80px;">
@@ -443,10 +441,8 @@
             const delivery_address = document.getElementById('o-address').value;
             if(!customer_name || !customer_phone || !delivery_address) return alert('Nhập đủ thông tin giao hàng!');
 
-            const resMenu = await fetch('/api/menu');
-            const menu = await resMenu.json();
             let items = [];
-            menu.forEach(m => {
+            globalMenuData.forEach(m => {
                 const qty = parseInt(document.getElementById(`online-qty-${m.id}`).value) || 0;
                 if(qty > 0) items.push({ item_id: m.id, item_name: m.item_name, price: m.price, quantity: qty, unit: m.unit });
             });
