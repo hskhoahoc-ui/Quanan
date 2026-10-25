@@ -16,12 +16,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Cấu hình kết nối PostgreSQL (Supabase Port 6543 hoặc Connection String)
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// HÀM TỰ ĐỘNG ĐỒNG BỘ KHO HÀNG HÓA SANG MENU (PHƯƠNG ÁN 1)
+// HÀM TỰ ĐỘNG ĐỒNG BỘ KHO HÀNG HÓA SANG MENU
 async function syncInventoryToMenu() {
     try {
         const invRes = await pool.query(`SELECT * FROM inventory`);
@@ -49,8 +50,10 @@ async function syncInventoryToMenu() {
     }
 }
 
+// KHỞI TẠO DATABASE (ĐÃ SỬA ĐỂ KHÔNG LÀM MẤT DỮ LIỆU CŨ)
 async function initDB() {
     try {
+        // Tạo bảng nếu chưa tồn tại
         await pool.query(`
             CREATE TABLE IF NOT EXISTS settings (
                 id SERIAL PRIMARY KEY,
@@ -148,11 +151,10 @@ async function initDB() {
 
         await pool.query(`ALTER TABLE inventory ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;`);
 
+        // Chỉ chèn dữ liệu mặc định NẾU BẢNG HOÀN TOÀN TRỐNG (Bảo vệ dữ liệu cũ)
         const resSet = await pool.query(`SELECT * FROM settings LIMIT 1`);
         if (resSet.rows.length === 0) {
             await pool.query(`INSERT INTO settings (name, address, phone) VALUES ('Quán ăn Demo', 'Cà Mau', '0123456789')`);
-        } else {
-            await pool.query(`UPDATE settings SET name = 'Quán ăn Demo' WHERE name IS NULL OR name = ''`);
         }
 
         const resUser = await pool.query(`SELECT * FROM users WHERE username = 'admin'`);
@@ -167,9 +169,8 @@ async function initDB() {
                 await pool.query(`INSERT INTO rooms (room_name, status) VALUES ($1, 'Trống')`, [`Bàn 0${i}`]);
             }
         }
-        console.log('Khởi tạo Database thành công!');
+        console.log('Kết nối và kiểm tra Database thành công!');
 
-        // Gọi đồng bộ dữ liệu kho sang menu ngay sau khi khởi tạo xong DB
         setTimeout(syncInventoryToMenu, 1000);
     } catch (err) {
         console.error('Lỗi khởi tạo DB:', err);
@@ -400,7 +401,7 @@ app.post('/api/admin/online-orders/checkout', async (req, res) => {
     res.json({ success: true, setting: setRes.rows[0], report: { room_name: `Online - ${order.customer_name}`, items, goodsTotal, shippingFee: ship, grandTotal } });
 });
 
-// Kho hàng hóa & Tự động đồng bộ chuẩn danh mục sang Menu
+// Kho hàng hóa
 app.get('/api/inventory', async (req, res) => {
     const result = await pool.query(`SELECT * FROM inventory ORDER BY id DESC`);
     res.json(result.rows);
